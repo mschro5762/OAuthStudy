@@ -32,6 +32,8 @@ A machine that is running the service, and a secrets server.
 If you want to run this service, you'll need to generate a 32 byte AES key and add it to the cryptokeys
 directory.  Double check that config/config.json has the correct file name.
 
+Currently, only HTTP basic authentication is available for Resource Owners and Clients
+
 Users and Clients can be registered at run time.
 
 ## 3rd party packages
@@ -67,6 +69,7 @@ Clients
 - [x] Generates a self descriptive object that is encrypted and sent
 - [ ] Add a web page for Resource Owner to actively consent to Client authorization
 - [ ] Add a system to handle more than one scope
+    - [ ] Add scope to Authorization Code
 - [ ] Sign Authorization Codes
 - [ ] PKCE protection (RFC 7636)
 
@@ -74,7 +77,9 @@ Clients
 - [ ] Endpoint works
 - [ ] Require Client authentication for non-public Clients
 - [ ] Token revocation on Client secret regeneration
+- [ ] After more than one scope is defined, check that scopes in the Authorization Code are allowed by the Resource Owner
 - [ ] Issue refresh tokens
+- [ ] BUG: memoize in Authorization Code whether or not a redirect_uri param was sent.  This is required by the Token endpoint to match to the original request.  The query values added to the redirect URI by the Authorization endpoint means that a Client cannot simply take the URI sent to the Redirect Endpoint and add it to the params to the Token Endpoint.  Whether or not a Client originally sent a redirect_uri param to the Authorization Endpoint is known to it, so it will know whether or not to send it to the Token Endpoint, as well as what the value actually is.
 
 ### OpenID Connect
 - [ ] TODO
@@ -124,3 +129,6 @@ Each of those blocks of semantics could be a block of asserts in a single method
 full test cases, you signal to other developers that they are important and any modification to them is a
 potentialy breaking change.  It also helps keep fat fingers from deleting them. (code review doesn't catch
 everything)
+
+It should be noted that if functionality is broken out into a private helper method, the unit test for those
+semantics should still test the public method as that is where the semantics are expected.
