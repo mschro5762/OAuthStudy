@@ -109,7 +109,7 @@ func (endpoints *WebEndpoints) getClient(ctx context.Context, rsp http.ResponseW
 		// Return 400 as we have no redirect URI to send error params to
 		rsp.WriteHeader(http.StatusBadRequest)
 		rsp.Write([]byte("Invalid cliend ID"))
-		return
+		return clients.Client{}, false
 	}
 
 	clientIDParam := clientIDParams[0]
