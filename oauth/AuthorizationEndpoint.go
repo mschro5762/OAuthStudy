@@ -288,5 +288,8 @@ func writeClientRedirect(ctx context.Context, redirectURI *url.URL, state string
 		zap.String("clientRedirectUri", redirectURI.String()))
 
 	rsp.Header().Add("Location", redirectURI.String())
+	rsp.Header().Add("Cache-Control", "no-store")
+	rsp.Header().Add("Pragma", "no-cache")
+
 	rsp.WriteHeader(http.StatusFound)
 }

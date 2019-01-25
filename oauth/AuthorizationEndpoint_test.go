@@ -3,9 +3,6 @@ package oauth
 import (
 	"context"
 	"errors"
-	"github.com/mschro5762/OAuthStudy/clients"
-	"github.com/mschro5762/OAuthStudy/contexthelper"
-	"github.com/mschro5762/OAuthStudy/users"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -13,6 +10,10 @@ import (
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+
+	"github.com/mschro5762/OAuthStudy/clients"
+	"github.com/mschro5762/OAuthStudy/contexthelper"
+	"github.com/mschro5762/OAuthStudy/users"
 )
 
 func TestAuthorizationEndpoint_BadUserCredentials_Writes401(t *testing.T) {
@@ -218,6 +219,28 @@ func TestAuthorizationEndpoint_HappyPath_StateSent_WritesOnlyOneState(t *testing
 	redirectQuery := redirectURL.Query()
 
 	if len(redirectQuery["state"]) != 1 {
+		t.Fail()
+	}
+}
+
+func TestAuthorizationEndpoint_HappyPath_WritesNoCacheHeaders(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+
+	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
+	rsp := httptest.NewRecorder()
+
+	endpoints.AuthorizationEndpoint(rsp, req)
+
+	cacheControlHeader := rsp.Header().Get("Cache-Control")
+	pragmaHeader := rsp.Header().Get("Pragma")
+
+	if cacheControlHeader != "no-store" || pragmaHeader != "no-cache" {
 		t.Fail()
 	}
 }
