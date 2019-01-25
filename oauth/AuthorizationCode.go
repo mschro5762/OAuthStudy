@@ -5,43 +5,47 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
-	"github.com/mschro5762/OAuthStudy/contexthelper"
-	"github.com/mschro5762/OAuthStudy/logging"
 	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+
+	"github.com/mschro5762/OAuthStudy/contexthelper"
+	"github.com/mschro5762/OAuthStudy/logging"
 )
 
 // authorizationCode is a self decriptive structure of what Client a User
 // is authorizing an AuthToken for.  It should never leave this package
 // unencrypted.
 type authorizationCode struct {
-	ClientID  uuid.UUID
-	UserID    uuid.UUID
-	IssuedAt  time.Time
-	ExpiresAt time.Time
+	ClientID        uuid.UUID
+	UserID          uuid.UUID
+	IssuedAt        time.Time
+	ExpiresAt       time.Time
+	RedirectURISent bool
 }
 
 // CreateAuthorizationCode Creates an authorization code
-func (tokenSvc *AuthTokenService) CreateAuthorizationCode(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, error) {
+func (tokenSvc *AuthTokenService) CreateAuthorizationCode(ctx context.Context, userID uuid.UUID, clientID uuid.UUID, redirectURISent bool) ([]byte, error) {
 	logger := contexthelper.LoggerFromContext(ctx)
 
 	iat := time.Now().UTC()
 	exp := iat.Add(tokenSvc.config.authzCodeTTL)
 
 	code := authorizationCode{
-		ClientID:  clientID,
-		UserID:    userID,
-		IssuedAt:  iat,
-		ExpiresAt: exp,
+		ClientID:        clientID,
+		UserID:          userID,
+		IssuedAt:        iat,
+		ExpiresAt:       exp,
+		RedirectURISent: redirectURISent,
 	}
 
 	logger.Info("Creating authorization code",
 		zap.String(logging.FieldClientID, code.ClientID.String()),
 		zap.String(logging.FieldUserID, code.UserID.String()),
 		zap.Time("iat", code.IssuedAt),
-		zap.Time("exp", code.ExpiresAt))
+		zap.Time("exp", code.ExpiresAt),
+		zap.Bool("redirectURISent", code.RedirectURISent))
 
 	encodedCode, err := encodeAuthCode(ctx, code)
 	if err != nil {
@@ -134,6 +138,14 @@ func encodeAuthCode(ctx context.Context, authCode authorizationCode) ([]byte, er
 		return nil, err
 	}
 
+	err = binary.Write(&buf, binary.BigEndian, authCode.RedirectURISent)
+	if err != nil {
+		logger := contexthelper.LoggerFromContext(ctx)
+		logger.Error("Error binary encoding authorization code",
+			zap.Error(err))
+		return nil, err
+	}
+
 	return buf.Bytes(), nil
 }
 
@@ -167,6 +179,14 @@ func decodeAuthCode(ctx context.Context, data []byte) (authorizationCode, error)
 	}
 
 	authCode.ExpiresAt, err = deserializeTime(ctx, buf)
+	if err != nil {
+		logger := contexthelper.LoggerFromContext(ctx)
+		logger.Error("Error binary decoding authorization code",
+			zap.Error(err))
+		return authorizationCode{}, err
+	}
+
+	err = binary.Read(buf, binary.BigEndian, &(authCode.RedirectURISent))
 	if err != nil {
 		logger := contexthelper.LoggerFromContext(ctx)
 		logger.Error("Error binary decoding authorization code",
