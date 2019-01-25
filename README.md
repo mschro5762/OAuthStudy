@@ -1,7 +1,6 @@
 # OAuth Study
 
 ## Summary
-======
 This project is just to gain practice with Go and to learn the ins and outs of OAuth 2.0 and OpenID Connect.
 
 > WARNING: This project is not production ready code.  It is meant as a vehicle for learning and has not
@@ -46,7 +45,7 @@ Using github.com/micro/go-config for configuration.  Not really necessary as I d
 config shenanigans in this project, but I plan on looking at the micro framework in more depth later.
 
 ## Backlog
-======
+
 ### Backing types
 These are just featured enough to support the OAuth flow.
 
