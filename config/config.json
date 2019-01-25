@@ -1,0 +1,19 @@
+{
+  "server": {
+    "address": ":8080"
+  },
+  "clientRegistry": {
+    "secretLength": 64,
+    "repoFilePath": "./filerepos/clientrepo.json"
+  },
+  "users": {
+    "repoFilePath": "./filerepos/usersrepo.json"
+  },
+  "tokens": {
+    "authzCodeCrypto": {
+      "name": "AES256-GCM",
+      "keyFile": "./cryptoKeys/authztoken.1.key"
+    },
+    "AuthzCodeTtl": "30s"
+  }
+}
