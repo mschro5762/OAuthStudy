@@ -79,7 +79,7 @@ Clients
 - [ ] Token revocation on Client secret regeneration
 - [ ] After more than one scope is defined, check that scopes in the Authorization Code are allowed by the Resource Owner
 - [ ] Issue refresh tokens
-- [ ] BUG: memoize in Authorization Code whether or not a redirect_uri param was sent.  This is required by the Token endpoint to match to the original request.  The query values added to the redirect URI by the Authorization endpoint means that a Client cannot simply take the URI sent to the Redirect Endpoint and add it to the params to the Token Endpoint.  Whether or not a Client originally sent a redirect_uri param to the Authorization Endpoint is known to it, so it will know whether or not to send it to the Token Endpoint, as well as what the value actually is.
+- [x] BUG: memoize in Authorization Code whether or not a redirect_uri param was sent.  This is required by the Token endpoint to match to the original request.  The query values added to the redirect URI by the Authorization endpoint means that a Client cannot simply take the URI sent to the Redirect Endpoint and add it to the params to the Token Endpoint.  Whether or not a Client originally sent a redirect_uri param to the Authorization Endpoint is known to it, so it will know whether or not to send it to the Token Endpoint, as well as what the value actually is.
 
 ### OpenID Connect
 - [ ] TODO
