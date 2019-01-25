@@ -233,8 +233,9 @@ func hashSecret(clearText string) ([]byte, error) {
 // https://tip.golang.org/pkg/regexp/syntax/
 // Note that Go does not support Regexr.com style flags, nor start/end '/' chars to mark the start/end of the regex.
 // We must use them in a group, or as a separate group at the beginning
-// BUG: make sure that there is no fragment component
-const uriRegex = `(?i)(?:[a-z][a-z0-9+.-]*):\/\/(?:[a-z][a-z0-9+.-]*)(?:\/[a-z][a-z0-9+.-]*)*(?:\?[a-z][a-z0-9+.-]*=[a-z][a-z0-9+.-]*)?`
+// Requirement: Make sure that there is no fragment component
+// Policy: No query params
+const uriRegex = `(?i)^(?:[a-z][a-z0-9+.-]*):\/\/(?:[a-z][a-z0-9+.-]*)(?:\/[a-z][a-z0-9+.-]*)*$`
 
 func validateURI(ctx context.Context, uri string) bool {
 	matched, err := regexp.Match(uriRegex, []byte(uri))

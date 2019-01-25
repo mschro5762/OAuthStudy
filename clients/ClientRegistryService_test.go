@@ -523,6 +523,74 @@ func TestClientRegistry_RegisterClient_RedirectURINotAURI_ReturnsEmptySecretClea
 	}
 }
 
+func TestClientRegistry_RegisterClient_RedirectURIContainsQueryParam_ReturnsError(t *testing.T) {
+	repo := ClientRepositoryFake{}
+
+	registry, _ := NewRegistry(context.Background(), &repo, clientSecretLen)
+
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+	clientName := "test"
+	isConfidential := true
+	redirectURI := "https://foo.com/path?one=two"
+
+	_, _, err := registry.RegisterClient(ctx, clientName, isConfidential, redirectURI)
+
+	if err != nil && err.Error() != "Invalid redirect URI" {
+		t.Fail()
+	}
+}
+
+func TestClientRegistry_RegisterClient_RedirectURIContainsQueryParam_ReturnsEmptySecretCleartext(t *testing.T) {
+	repo := ClientRepositoryFake{}
+
+	registry, _ := NewRegistry(context.Background(), &repo, clientSecretLen)
+
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+	clientName := "test"
+	isConfidential := true
+	redirectURI := "https://foo.com/path?one=two"
+
+	_, secretCleartext, _ := registry.RegisterClient(ctx, clientName, isConfidential, redirectURI)
+
+	if secretCleartext != "" {
+		t.Fail()
+	}
+}
+
+func TestClientRegistry_RegisterClient_RedirectURIContainsFragment_ReturnsError(t *testing.T) {
+	repo := ClientRepositoryFake{}
+
+	registry, _ := NewRegistry(context.Background(), &repo, clientSecretLen)
+
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+	clientName := "test"
+	isConfidential := true
+	redirectURI := "https://foo.com/path#bar"
+
+	_, _, err := registry.RegisterClient(ctx, clientName, isConfidential, redirectURI)
+
+	if err != nil && err.Error() != "Invalid redirect URI" {
+		t.Fail()
+	}
+}
+
+func TestClientRegistry_RegisterClient_RedirectURIContainsFragment_ReturnsEmptySecretCleartext(t *testing.T) {
+	repo := ClientRepositoryFake{}
+
+	registry, _ := NewRegistry(context.Background(), &repo, clientSecretLen)
+
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+	clientName := "test"
+	isConfidential := true
+	redirectURI := "https://foo.com/path#bar"
+
+	_, secretCleartext, _ := registry.RegisterClient(ctx, clientName, isConfidential, redirectURI)
+
+	if secretCleartext != "" {
+		t.Fail()
+	}
+}
+
 func TestClientRegistry_RegisterClient_RepositoryError_ReturnsZeroClient(t *testing.T) {
 	repo := ClientRepositoryFake{
 		CreateFunc: func(ctx context.Context, client Client) error {
