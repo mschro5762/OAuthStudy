@@ -27,7 +27,7 @@ type IClientRegistryService interface {
 
 	GenerateNewClientSecret(ctx context.Context, clientID uuid.UUID) (string, error)
 
-	VerifyClientSecret(ctx context.Context, clientID uuid.UUID, secret string) (bool, error)
+	VerifyClientSecret(ctx context.Context, client Client, secret string) (bool, error)
 }
 
 // ClientRegistryService Concrete type for a Client registry
@@ -175,17 +175,12 @@ func (registry *ClientRegistryService) GenerateNewClientSecret(ctx context.Conte
 }
 
 // VerifyClientSecret Validates a given secret is correct for the given client.
-func (registry *ClientRegistryService) VerifyClientSecret(ctx context.Context, clientID uuid.UUID, clientSecret string) (bool, error) {
+func (registry *ClientRegistryService) VerifyClientSecret(ctx context.Context, client Client, clientSecret string) (bool, error) {
 	logger := contexthelper.LoggerFromContext(ctx)
-
-	client, err := registry.repo.Retrieve(ctx, clientID)
-	if err != nil {
-		return false, err
-	}
 
 	logger.Info("Comparing secrets for client")
 
-	err = bcrypt.CompareHashAndPassword(client.Secret, []byte(clientSecret))
+	err := bcrypt.CompareHashAndPassword(client.Secret, []byte(clientSecret))
 	if err != nil {
 		logger.Info("Password compare failure",
 			zap.Error(err))

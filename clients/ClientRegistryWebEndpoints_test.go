@@ -23,7 +23,7 @@ type ClientRegistryServiceFake struct {
 	GetClientFunc               func(context.Context, uuid.UUID) (Client, error)
 	DeleteClientFunc            func(context.Context, uuid.UUID) error
 	GenerateNewClientSecretFunc func(context.Context, uuid.UUID) (string, error)
-	VerifyClientSecretFunc      func(context.Context, uuid.UUID, string) (bool, error)
+	VerifyClientSecretFunc      func(context.Context, Client, string) (bool, error)
 }
 
 func (fake *ClientRegistryServiceFake) RegisterClient(ctx context.Context, clientName string, isConfidential bool, redirectURI string) (Client, string, error) {
@@ -58,9 +58,9 @@ func (fake *ClientRegistryServiceFake) GenerateNewClientSecret(ctx context.Conte
 	return "abcde", nil
 }
 
-func (fake *ClientRegistryServiceFake) VerifyClientSecret(ctx context.Context, clientID uuid.UUID, clientSecret string) (bool, error) {
+func (fake *ClientRegistryServiceFake) VerifyClientSecret(ctx context.Context, client Client, clientSecret string) (bool, error) {
 	if fake.VerifyClientSecretFunc != nil {
-		return fake.VerifyClientSecretFunc(ctx, clientID, clientSecret)
+		return fake.VerifyClientSecretFunc(ctx, client, clientSecret)
 	}
 
 	return false, nil

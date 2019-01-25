@@ -949,7 +949,7 @@ func TestClientRegistry_VerifyClientSecret_SecretMatches_ReturnsTrue(t *testing.
 
 	registry, _ := NewRegistry(context.Background(), &repo, clientSecretLen)
 
-	isValid, _ := registry.VerifyClientSecret(ctx, client.ID, secretPlainText)
+	isValid, _ := registry.VerifyClientSecret(ctx, client, secretPlainText)
 
 	if !isValid {
 		t.Fail()
@@ -978,7 +978,7 @@ func TestClientRegistry_VerifyClientSecret_SecretMatches_ReturnsNilError(t *test
 
 	registry, _ := NewRegistry(context.Background(), &repo, clientSecretLen)
 
-	_, err := registry.VerifyClientSecret(ctx, client.ID, secretPlainText)
+	_, err := registry.VerifyClientSecret(ctx, client, secretPlainText)
 
 	if err != nil {
 		t.Fail()
@@ -1007,7 +1007,7 @@ func TestClientRegistry_VerifyClientSecret_SecretDoesNotMatch_ReturnsFalse(t *te
 
 	registry, _ := NewRegistry(context.Background(), &repo, clientSecretLen)
 
-	isValid, _ := registry.VerifyClientSecret(ctx, client.ID, "badcleartext")
+	isValid, _ := registry.VerifyClientSecret(ctx, client, "badcleartext")
 
 	if isValid {
 		t.Fail()
@@ -1036,67 +1036,9 @@ func TestClientRegistry_VerifyClientSecret_SecretDoesNotMatch_ReturnsNilError(t 
 
 	registry, _ := NewRegistry(context.Background(), &repo, clientSecretLen)
 
-	_, err := registry.VerifyClientSecret(ctx, client.ID, "badcleartext")
+	_, err := registry.VerifyClientSecret(ctx, client, "badcleartext")
 
 	if err != nil {
-		t.Fail()
-	}
-}
-
-func TestClientRegistry_VerifyClientSecret_RepoRetrieveError_ReturnsFalse(t *testing.T) {
-	secretPlainText := "abcd"
-	hashedSecret, _ := hashSecret(secretPlainText)
-
-	client := Client{
-		ID:             uuid.New(),
-		Secret:         hashedSecret,
-		Name:           "test client",
-		IsConfidential: true,
-	}
-
-	repo := ClientRepositoryFake{
-		RetrieveFunc: func(ctx context.Context, clientID uuid.UUID) (Client, error) {
-			// Returning by value, so the original shouldn't be mutated
-			return Client{}, errors.New("test error")
-		},
-	}
-
-	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
-
-	registry, _ := NewRegistry(context.Background(), &repo, clientSecretLen)
-
-	isValid, _ := registry.VerifyClientSecret(ctx, client.ID, "badcleartext")
-
-	if isValid {
-		t.Fail()
-	}
-}
-
-func TestClientRegistry_VerifyClientSecret_RepoRetrieveError_ReturnsError(t *testing.T) {
-	secretPlainText := "abcd"
-	hashedSecret, _ := hashSecret(secretPlainText)
-
-	client := Client{
-		ID:             uuid.New(),
-		Secret:         hashedSecret,
-		Name:           "test client",
-		IsConfidential: true,
-	}
-
-	repo := ClientRepositoryFake{
-		RetrieveFunc: func(ctx context.Context, clientID uuid.UUID) (Client, error) {
-			// Returning by value, so the original shouldn't be mutated
-			return Client{}, errors.New("test error")
-		},
-	}
-
-	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
-
-	registry, _ := NewRegistry(context.Background(), &repo, clientSecretLen)
-
-	_, err := registry.VerifyClientSecret(ctx, client.ID, "badcleartext")
-
-	if err == nil {
 		t.Fail()
 	}
 }
