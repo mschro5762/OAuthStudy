@@ -10,10 +10,12 @@
     "repoFilePath": "./filerepos/usersrepo.json"
   },
   "tokens": {
+    "issuerUri": "https://example.com",
     "authzCodeCrypto": {
       "name": "AES256-GCM",
       "keyFile": "./cryptoKeys/authztoken.1.key"
     },
-    "AuthzCodeTtl": "30s"
+    "authzCodeTtl": "30s",
+    "accessTokenTtl": "30m"
   }
 }

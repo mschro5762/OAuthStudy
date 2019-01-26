@@ -25,10 +25,12 @@ const (
 
 // AuthTokenServiceConfig Configuration for the Authorization Service
 type AuthTokenServiceConfig struct {
-	AuthzCodeCrypto crypto.EncrypterConfig `json:"authzCodeCrypto"`
-	// AuthzCodeTTL A time.Duration string
-	AuthzCodeTTLString string `json:"authzCodeTtl"`
-	authzCodeTTL       time.Duration
+	IssuerUri            string                 `json:"issuerUri"`
+	AuthzCodeCrypto      crypto.EncrypterConfig `json:"authzCodeCrypto"`
+	AuthzCodeTTLString   string                 `json:"authzCodeTtl"`   // A time.Duration string
+	AccessTokenTTLString string                 `json:"accessTokenTtl"` // A time.Duration string
+	authzCodeTTL         time.Duration
+	accessTokenTTL       time.Duration
 }
 
 // IAuthTokenService Authorization token service interface
@@ -60,6 +62,13 @@ func NewAuthTokenService(ctx context.Context, config AuthTokenServiceConfig, enc
 			zap.Error(err))
 	}
 	config.authzCodeTTL = authCodeTTL
+
+	accessTokenTTL, err := time.ParseDuration(config.AccessTokenTTLString)
+	if err != nil {
+		logger.Panic("Unable to parse Access Token TTL config",
+			zap.Error(err))
+	}
+	config.accessTokenTTL = accessTokenTTL
 
 	newSvc := AuthTokenService{
 		config:    config,
