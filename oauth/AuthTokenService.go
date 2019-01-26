@@ -33,7 +33,7 @@ type AuthTokenServiceConfig struct {
 // IAuthTokenService Authorization token service interface
 type IAuthTokenService interface {
 	CreateAuthorizationCode(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, error)
-	ValidateAuthorizationCode(ctx context.Context, clientID uuid.UUID, authzCode []byte) (bool, error)
+	ValidateAuthorizationCode(ctx context.Context, clientID uuid.UUID, authzCode []byte, redirectURI string) (bool, error)
 }
 
 // AuthTokenService Authorization token service

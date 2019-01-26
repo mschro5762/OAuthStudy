@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	"github.com/mschro5762/OAuthStudy/clients"
 	"github.com/mschro5762/OAuthStudy/contexthelper"
 )
 
@@ -240,7 +241,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_HappyPath_ReturnsTrue(t *tes
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
 	codeTTL, _ := time.ParseDuration("5m")
-	clientID := uuid.New()
+	client := clients.Client{
+		ID: uuid.New(),
+	}
 	userID := uuid.New()
 
 	encrypterFake := EncrypterFake{}
@@ -252,9 +255,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_HappyPath_ReturnsTrue(t *tes
 		encrypter: &encrypterFake,
 	}
 
-	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, clientID, false)
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, clientID, authzCode)
+	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if !isValid {
 		t.Fail()
@@ -265,7 +268,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_HappyPath_ReturnsNilError(t 
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
 	codeTTL, _ := time.ParseDuration("5m")
-	clientID := uuid.New()
+	client := clients.Client{
+		ID: uuid.New(),
+	}
 	userID := uuid.New()
 
 	encrypterFake := EncrypterFake{}
@@ -277,9 +282,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_HappyPath_ReturnsNilError(t 
 		encrypter: &encrypterFake,
 	}
 
-	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, clientID, false)
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, clientID, authzCode)
+	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if err != nil {
 		t.Fail()
@@ -290,7 +295,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_CodeExpired_ReturnsFalse(t *
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
 	codeTTL, _ := time.ParseDuration("1ms")
-	clientID := uuid.New()
+	client := clients.Client{
+		ID: uuid.New(),
+	}
 	userID := uuid.New()
 
 	encrypterFake := EncrypterFake{}
@@ -302,12 +309,12 @@ func TestAuthtokenService_ValidateAuthorizationCode_CodeExpired_ReturnsFalse(t *
 		encrypter: &encrypterFake,
 	}
 
-	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, clientID, false)
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
 	sleepDuration, _ := time.ParseDuration("5ms")
 	time.Sleep(sleepDuration)
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, clientID, authzCode)
+	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if isValid {
 		t.Fail()
@@ -318,7 +325,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_CodeExpired_ReturnsNilError(
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
 	codeTTL, _ := time.ParseDuration("1ms")
-	clientID := uuid.New()
+	client := clients.Client{
+		ID: uuid.New(),
+	}
 	userID := uuid.New()
 
 	encrypterFake := EncrypterFake{}
@@ -330,12 +339,12 @@ func TestAuthtokenService_ValidateAuthorizationCode_CodeExpired_ReturnsNilError(
 		encrypter: &encrypterFake,
 	}
 
-	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, clientID, false)
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
 	sleepDuration, _ := time.ParseDuration("5ms")
 	time.Sleep(sleepDuration)
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, clientID, authzCode)
+	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if err != nil {
 		t.Fail()
@@ -346,7 +355,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_ClientMismatch_ReturnsFalse(
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
 	codeTTL, _ := time.ParseDuration("5m")
-	clientID := uuid.New()
+	client := clients.Client{
+		ID: uuid.New(),
+	}
 	userID := uuid.New()
 
 	encrypterFake := EncrypterFake{}
@@ -358,9 +369,13 @@ func TestAuthtokenService_ValidateAuthorizationCode_ClientMismatch_ReturnsFalse(
 		encrypter: &encrypterFake,
 	}
 
-	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, clientID, false)
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, uuid.New(), authzCode)
+	badClient := clients.Client{
+		ID: uuid.New(),
+	}
+
+	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, badClient, authzCode, "")
 
 	if isValid {
 		t.Fail()
@@ -371,7 +386,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_ClientMismatch_ReturnsNilErr
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
 	codeTTL, _ := time.ParseDuration("5m")
-	clientID := uuid.New()
+	client := clients.Client{
+		ID: uuid.New(),
+	}
 	userID := uuid.New()
 
 	encrypterFake := EncrypterFake{}
@@ -383,9 +400,13 @@ func TestAuthtokenService_ValidateAuthorizationCode_ClientMismatch_ReturnsNilErr
 		encrypter: &encrypterFake,
 	}
 
-	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, clientID, false)
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, uuid.New(), authzCode)
+	badClient := clients.Client{
+		ID: uuid.New(),
+	}
+
+	_, err := authSvc.ValidateAuthorizationCode(ctx, badClient, authzCode, "")
 
 	if err != nil {
 		t.Fail()
@@ -396,7 +417,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_DecryptionError_ReturnsFalse
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
 	codeTTL, _ := time.ParseDuration("5m")
-	clientID := uuid.New()
+	client := clients.Client{
+		ID: uuid.New(),
+	}
 	userID := uuid.New()
 
 	encrypterFake := EncrypterFake{
@@ -412,9 +435,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_DecryptionError_ReturnsFalse
 		encrypter: &encrypterFake,
 	}
 
-	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, clientID, false)
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, clientID, authzCode)
+	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if isValid {
 		t.Fail()
@@ -425,7 +448,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_DecryptionError_ReturnsError
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
 	codeTTL, _ := time.ParseDuration("5m")
-	clientID := uuid.New()
+	client := clients.Client{
+		ID: uuid.New(),
+	}
 	userID := uuid.New()
 
 	encrypterFake := EncrypterFake{
@@ -441,9 +466,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_DecryptionError_ReturnsError
 		encrypter: &encrypterFake,
 	}
 
-	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, clientID, false)
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, clientID, authzCode)
+	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if err == nil {
 		t.Fail()
@@ -454,7 +479,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_DeserializationError_Returns
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
 	codeTTL, _ := time.ParseDuration("5m")
-	clientID := uuid.New()
+	client := clients.Client{
+		ID: uuid.New(),
+	}
 
 	encrypterFake := EncrypterFake{}
 
@@ -465,7 +492,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_DeserializationError_Returns
 		encrypter: &encrypterFake,
 	}
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, clientID, []byte("BadCode"))
+	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, []byte("BadCode"), "")
 
 	if isValid {
 		t.Fail()
@@ -476,7 +503,9 @@ func TestAuthtokenService_ValidateAuthorizationCode_DeserializationError_Returns
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
 	codeTTL, _ := time.ParseDuration("5m")
-	clientID := uuid.New()
+	client := clients.Client{
+		ID: uuid.New(),
+	}
 
 	encrypterFake := EncrypterFake{}
 
@@ -487,9 +516,177 @@ func TestAuthtokenService_ValidateAuthorizationCode_DeserializationError_Returns
 		encrypter: &encrypterFake,
 	}
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, clientID, []byte("BadCode"))
+	_, err := authSvc.ValidateAuthorizationCode(ctx, client, []byte("BadCode"), "")
 
 	if err == nil {
+		t.Fail()
+	}
+}
+
+func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_HappyPath_ReturnsTrue(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	codeTTL, _ := time.ParseDuration("5m")
+	client := clients.Client{
+		ID:          uuid.New(),
+		RedirectURI: "urn:testURI",
+	}
+	userID := uuid.New()
+
+	encrypterFake := EncrypterFake{}
+
+	authSvc := AuthTokenService{
+		config: AuthTokenServiceConfig{
+			authzCodeTTL: codeTTL,
+		},
+		encrypter: &encrypterFake,
+	}
+
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, true)
+
+	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, client.RedirectURI)
+
+	if !isValid {
+		t.Fail()
+	}
+}
+
+func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_HappyPath_ReturnsNilError(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	codeTTL, _ := time.ParseDuration("5m")
+	client := clients.Client{
+		ID:          uuid.New(),
+		RedirectURI: "urn:testURI",
+	}
+	userID := uuid.New()
+
+	encrypterFake := EncrypterFake{}
+
+	authSvc := AuthTokenService{
+		config: AuthTokenServiceConfig{
+			authzCodeTTL: codeTTL,
+		},
+		encrypter: &encrypterFake,
+	}
+
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, true)
+
+	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, client.RedirectURI)
+
+	if err != nil {
+		t.Fail()
+	}
+}
+
+func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_URIMismatch_ReturnsFalse(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	codeTTL, _ := time.ParseDuration("5m")
+	client := clients.Client{
+		ID:          uuid.New(),
+		RedirectURI: "urn:testURI",
+	}
+	userID := uuid.New()
+
+	encrypterFake := EncrypterFake{}
+
+	authSvc := AuthTokenService{
+		config: AuthTokenServiceConfig{
+			authzCodeTTL: codeTTL,
+		},
+		encrypter: &encrypterFake,
+	}
+
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, true)
+
+	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "bad URI")
+
+	if isValid {
+		t.Fail()
+	}
+}
+
+func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_URIMismatch_ReturnsNilError(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	codeTTL, _ := time.ParseDuration("5m")
+	client := clients.Client{
+		ID:          uuid.New(),
+		RedirectURI: "urn:testURI",
+	}
+	userID := uuid.New()
+
+	encrypterFake := EncrypterFake{}
+
+	authSvc := AuthTokenService{
+		config: AuthTokenServiceConfig{
+			authzCodeTTL: codeTTL,
+		},
+		encrypter: &encrypterFake,
+	}
+
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, true)
+
+	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "bad URI")
+
+	if err != nil {
+		t.Fail()
+	}
+}
+
+func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_EmptyURIParam_ReturnsFalse(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	codeTTL, _ := time.ParseDuration("5m")
+	client := clients.Client{
+		ID:          uuid.New(),
+		RedirectURI: "urn:testURI",
+	}
+	userID := uuid.New()
+
+	encrypterFake := EncrypterFake{}
+
+	authSvc := AuthTokenService{
+		config: AuthTokenServiceConfig{
+			authzCodeTTL: codeTTL,
+		},
+		encrypter: &encrypterFake,
+	}
+
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, true)
+
+	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
+
+	if isValid {
+		t.Fail()
+	}
+}
+
+func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_EmptyURIParam_ReturnsNilError(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	codeTTL, _ := time.ParseDuration("5m")
+	client := clients.Client{
+		ID:          uuid.New(),
+		RedirectURI: "urn:testURI",
+	}
+	userID := uuid.New()
+
+	encrypterFake := EncrypterFake{}
+
+	authSvc := AuthTokenService{
+		config: AuthTokenServiceConfig{
+			authzCodeTTL: codeTTL,
+		},
+		encrypter: &encrypterFake,
+	}
+
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, true)
+
+	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
+
+	if err != nil {
 		t.Fail()
 	}
 }

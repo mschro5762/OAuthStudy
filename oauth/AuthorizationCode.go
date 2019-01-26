@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	"github.com/mschro5762/OAuthStudy/clients"
 	"github.com/mschro5762/OAuthStudy/contexthelper"
 	"github.com/mschro5762/OAuthStudy/logging"
 )
@@ -64,7 +65,7 @@ func (tokenSvc *AuthTokenService) CreateAuthorizationCode(ctx context.Context, u
 
 // ValidateAuthorizationCode Validates that a given authorization code is valid.
 // Tests that the code is within it's lifetime, and that it was requested for the given client.
-func (tokenSvc *AuthTokenService) ValidateAuthorizationCode(ctx context.Context, clientID uuid.UUID, authzCode []byte) (bool, error) {
+func (tokenSvc *AuthTokenService) ValidateAuthorizationCode(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, error) {
 	logger := contexthelper.LoggerFromContext(ctx)
 
 	now := time.Now().UTC()
@@ -85,7 +86,8 @@ func (tokenSvc *AuthTokenService) ValidateAuthorizationCode(ctx context.Context,
 		zap.String(logging.FieldClientID, code.ClientID.String()),
 		zap.String(logging.FieldUserID, code.UserID.String()),
 		zap.Time("iat", code.IssuedAt),
-		zap.Time("exp", code.ExpiresAt))
+		zap.Time("exp", code.ExpiresAt),
+		zap.Bool("redirectURISent", code.RedirectURISent))
 
 	logger.Info("Checking Authorization code")
 
@@ -94,8 +96,15 @@ func (tokenSvc *AuthTokenService) ValidateAuthorizationCode(ctx context.Context,
 		return false, nil
 	}
 
-	if code.ClientID != clientID {
+	if code.ClientID != client.ID {
 		logger.Warn("Authoriztion code not for requesting Client")
+		return false, nil
+	}
+
+	if code.RedirectURISent && client.RedirectURI != redirectURI {
+		logger.Warn("Redirect URI mismatch",
+			zap.String("clientRedirectURI", client.RedirectURI),
+			zap.String("redirectURISent", redirectURI))
 		return false, nil
 	}
 
