@@ -115,7 +115,7 @@ var testAuthzCode = "testcode"
 
 type authzServiceFake struct {
 	CreateAuthorizationCodeFunc   func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, error)
-	ValidateAuthorizationCodeFunc func(ctx context.Context, clientID uuid.UUID, authzCode []byte, redirectURI string) (bool, error)
+	ValidateAuthorizationCodeFunc func(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, error)
 }
 
 func (fake *authzServiceFake) CreateAuthorizationCode(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, error) {
@@ -126,9 +126,9 @@ func (fake *authzServiceFake) CreateAuthorizationCode(ctx context.Context, userI
 	return []byte(testAuthzCode), nil
 }
 
-func (fake *authzServiceFake) ValidateAuthorizationCode(ctx context.Context, clientID uuid.UUID, authzCode []byte, redirectURI string) (bool, error) {
+func (fake *authzServiceFake) ValidateAuthorizationCode(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, error) {
 	if fake.ValidateAuthorizationCodeFunc != nil {
-		return fake.ValidateAuthorizationCodeFunc(ctx, clientID, authzCode, redirectURI)
+		return fake.ValidateAuthorizationCodeFunc(ctx, client, authzCode, redirectURI)
 	}
 
 	return false, nil
