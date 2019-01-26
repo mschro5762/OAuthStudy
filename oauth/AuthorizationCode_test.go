@@ -579,6 +579,60 @@ func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_HappyPath_Re
 	}
 }
 
+func TestAuthtokenService_ValidateAuthorizationCode_RedirectURINotSent_RedirectURIParamSent_ReturnsTrue(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	codeTTL, _ := time.ParseDuration("5m")
+	client := clients.Client{
+		ID: uuid.New(),
+	}
+	userID := uuid.New()
+
+	encrypterFake := EncrypterFake{}
+
+	authSvc := AuthTokenService{
+		config: AuthTokenServiceConfig{
+			authzCodeTTL: codeTTL,
+		},
+		encrypter: &encrypterFake,
+	}
+
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
+
+	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, client.RedirectURI)
+
+	if !isValid {
+		t.Fail()
+	}
+}
+
+func TestAuthtokenService_ValidateAuthorizationCode_RedirectURINotSent_RedirectURIParamSent_ReturnsNilError(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	codeTTL, _ := time.ParseDuration("5m")
+	client := clients.Client{
+		ID: uuid.New(),
+	}
+	userID := uuid.New()
+
+	encrypterFake := EncrypterFake{}
+
+	authSvc := AuthTokenService{
+		config: AuthTokenServiceConfig{
+			authzCodeTTL: codeTTL,
+		},
+		encrypter: &encrypterFake,
+	}
+
+	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
+
+	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "urn:testuri")
+
+	if err != nil {
+		t.Fail()
+	}
+}
+
 func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_URIMismatch_ReturnsFalse(t *testing.T) {
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
