@@ -25,7 +25,7 @@ const (
 
 // AuthTokenServiceConfig Configuration for the Authorization Service
 type AuthTokenServiceConfig struct {
-	IssuerUri            string                 `json:"issuerUri"`
+	IssuerURI            string                 `json:"issuerUri"`
 	AuthzCodeCrypto      crypto.EncrypterConfig `json:"authzCodeCrypto"`
 	AuthzCodeTTLString   string                 `json:"authzCodeTtl"`   // A time.Duration string
 	AccessTokenTTLString string                 `json:"accessTokenTtl"` // A time.Duration string
@@ -35,7 +35,7 @@ type AuthTokenServiceConfig struct {
 
 // IAuthTokenService Authorization token service interface
 type IAuthTokenService interface {
-	CreateAuthorizationCode(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, error)
+	CreateAuthorizationCode(ctx context.Context, userID uuid.UUID, clientID uuid.UUID, redirectURISent bool) ([]byte, error)
 	ValidateAuthorizationCode(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, error)
 }
 
@@ -47,8 +47,6 @@ type AuthTokenService struct {
 
 // NewAuthTokenService Constructs a new AuthTokenService instance
 func NewAuthTokenService(ctx context.Context, config AuthTokenServiceConfig, encrypter crypto.IEncrypter) *AuthTokenService {
-	logger := contexthelper.LoggerFromContext(ctx)
-
 	if config == (AuthTokenServiceConfig{}) {
 		panic("Empty config passed!")
 	}
@@ -56,19 +54,7 @@ func NewAuthTokenService(ctx context.Context, config AuthTokenServiceConfig, enc
 		panic("Nil Argument: encrypter")
 	}
 
-	authCodeTTL, err := time.ParseDuration(config.AuthzCodeTTLString)
-	if err != nil {
-		logger.Panic("Unable to parse Authorization Code TTL config",
-			zap.Error(err))
-	}
-	config.authzCodeTTL = authCodeTTL
-
-	accessTokenTTL, err := time.ParseDuration(config.AccessTokenTTLString)
-	if err != nil {
-		logger.Panic("Unable to parse Access Token TTL config",
-			zap.Error(err))
-	}
-	config.accessTokenTTL = accessTokenTTL
+	config = buildConfig(ctx, config)
 
 	newSvc := AuthTokenService{
 		config:    config,
@@ -76,4 +62,25 @@ func NewAuthTokenService(ctx context.Context, config AuthTokenServiceConfig, enc
 	}
 
 	return &newSvc
+}
+
+func buildConfig(ctx context.Context, proto AuthTokenServiceConfig) AuthTokenServiceConfig {
+	logger := contexthelper.LoggerFromContext(ctx)
+
+	authCodeTTL, err := time.ParseDuration(proto.AuthzCodeTTLString)
+	if err != nil {
+		logger.Panic("Unable to parse Authorization Code TTL config",
+			zap.Error(err))
+	}
+	proto.authzCodeTTL = authCodeTTL
+
+	accessTokenTTL, err := time.ParseDuration(proto.AccessTokenTTLString)
+	if err != nil {
+		logger.Panic("Unable to parse Access Token TTL config",
+			zap.Error(err))
+	}
+	proto.accessTokenTTL = accessTokenTTL
+
+	return proto
+
 }

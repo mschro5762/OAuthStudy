@@ -11,9 +11,7 @@ import (
 func TestAuthTokenService_Ctor_HappyPath_ReturnsService(t *testing.T) {
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
-	config := AuthTokenServiceConfig{
-		AuthzCodeTTLString: "15m",
-	}
+	config := buildDefaultAuthConfig()
 
 	encrypterFake := EncrypterFake{}
 
@@ -49,9 +47,7 @@ func TestAuthTokenService_Ctor_EncrypterNil_Panics(t *testing.T) {
 
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
-	config := AuthTokenServiceConfig{
-		AuthzCodeTTLString: "15m",
-	}
+	config := buildDefaultAuthConfig()
 
 	_ = NewAuthTokenService(ctx, config, nil)
 }
@@ -72,4 +68,13 @@ func TestAuthTokenService_Ctor_TTLNotParsable_Panics(t *testing.T) {
 	encrypterFake := EncrypterFake{}
 
 	_ = NewAuthTokenService(ctx, config, &encrypterFake)
+}
+
+func buildDefaultAuthConfig() AuthTokenServiceConfig {
+	newConfig := AuthTokenServiceConfig{
+		AuthzCodeTTLString:   "15m",
+		AccessTokenTTLString: "15m",
+	}
+
+	return newConfig
 }

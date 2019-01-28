@@ -49,7 +49,7 @@ func (endpoints *WebEndpoints) AuthorizationEndpoint(rsp http.ResponseWriter, re
 	ctx = contexthelper.AddLoggertoContext(ctx, logger)
 	req = req.WithContext(ctx)
 
-	canContinue = handleRedirectURIParam(ctx, rsp, req, client)
+	redirectURISent, canContinue := handleRedirectURIParam(ctx, rsp, req, client)
 	if !canContinue {
 		// handleRedirectURIParam will have logged and written to rsp
 		return
@@ -73,7 +73,7 @@ func (endpoints *WebEndpoints) AuthorizationEndpoint(rsp http.ResponseWriter, re
 		return
 	}
 
-	code, err := endpoints.authTokenSvc.CreateAuthorizationCode(ctx, user.ID, client.ID)
+	code, err := endpoints.authTokenSvc.CreateAuthorizationCode(ctx, user.ID, client.ID, redirectURISent)
 	if err != nil {
 		// CreateAuthorizationCode will have logged
 		err = writeAuthorizationErrorResponseRedirect(ctx, authzCodeErrorServerError, "", client, state, rsp)
@@ -98,7 +98,7 @@ func (endpoints *WebEndpoints) AuthorizationEndpoint(rsp http.ResponseWriter, re
 	}
 }
 
-func handleRedirectURIParam(ctx context.Context, rsp http.ResponseWriter, req *http.Request, client clients.Client) (canContinue bool) {
+func handleRedirectURIParam(ctx context.Context, rsp http.ResponseWriter, req *http.Request, client clients.Client) (redirectURISent, canContinue bool) {
 	logger := contexthelper.LoggerFromContext(ctx)
 
 	redirectURIs := req.URL.Query()["redirect_uri"]
@@ -110,7 +110,7 @@ func handleRedirectURIParam(ctx context.Context, rsp http.ResponseWriter, req *h
 				zap.Int("redirectUriCount", redirectURIsLen))
 			// Error out, don't redirect, no information to attackers
 			rsp.WriteHeader(http.StatusBadRequest)
-			return false
+			return true, false
 		}
 
 		redirectURI := redirectURIs[0]
@@ -125,15 +125,15 @@ func handleRedirectURIParam(ctx context.Context, rsp http.ResponseWriter, req *h
 				zap.String("redirectUriParam", redirectURI))
 			// Error out, don't redirect, no information to attackers
 			rsp.WriteHeader(http.StatusBadRequest)
-			return false
+			return true, false
 		}
 
 		logger.Info("Redirect URI match")
-	} else {
-		logger.Info("No redirect URI parameter")
+		return true, true
 	}
 
-	return true
+	logger.Info("No redirect URI parameter")
+	return false, true
 }
 
 func handleStateParam(ctx context.Context, rsp http.ResponseWriter, req *http.Request, client clients.Client) (state string, canContinue bool) {

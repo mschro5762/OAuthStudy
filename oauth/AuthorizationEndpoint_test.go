@@ -27,7 +27,9 @@ func TestAuthorizationEndpoint_BadUserCredentials_Writes401(t *testing.T) {
 	}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	redirectURI := "https://attacker.com"
 
@@ -54,7 +56,9 @@ func TestAuthorizationEndpoint_NoUserCredentials_Writes401(t *testing.T) {
 	}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	redirectURI := "https://attacker.com"
 
@@ -81,7 +85,9 @@ func TestAuthorizationEndpoint_NoUserCredentials_DoesNotWriteLocationHeader(t *t
 	}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	redirectURI := "https://attacker.com"
 
@@ -106,7 +112,9 @@ func TestAuthorizationEndpoint_HappyPath_WritesAuthzCode(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -130,7 +138,9 @@ func TestAuthorizationEndpoint_HappyPath_WritesOnlyOneAuthzCode(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -154,7 +164,9 @@ func TestAuthorizationEndpoint_HappyPath_NoStateSent_DoesNotWriteState(t *testin
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -178,7 +190,9 @@ func TestAuthorizationEndpoint_HappyPath_StateSent_WritesState(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	expectedState := "foostate"
 
@@ -204,7 +218,9 @@ func TestAuthorizationEndpoint_HappyPath_StateSent_WritesOnlyOneState(t *testing
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	expectedState := "foostate"
 
@@ -230,7 +246,9 @@ func TestAuthorizationEndpoint_HappyPath_WritesNoCacheHeaders(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -252,7 +270,9 @@ func TestAuthorizationEndpoint_TwoStatesSent_WritesInvalidRequest(t *testing.T) 
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -280,7 +300,9 @@ func TestAuthorizationEndpoint_TwoStatesSent_DoesNotWriteCode(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -308,7 +330,9 @@ func TestAuthorizationEndpoint_HappyPath_ClientsRedirectURISent_WritesCode(t *te
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	redirectURI := testClient.RedirectURI
 
@@ -334,7 +358,9 @@ func TestAuthorizationEndpoint_BadRedirectURISent_Writes400(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	redirectURI := "https://attacker.com"
 
@@ -355,7 +381,9 @@ func TestAuthorizationEndpoint_BadRedirectURISent_DoesNotWriteLocationHeader(t *
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	redirectURI := "https://attacker.com"
 
@@ -378,7 +406,9 @@ func TestAuthorizationEndpoint_TwoRedirectURIsSent_Writes400(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -401,7 +431,9 @@ func TestAuthorizationEndpoint_TwoRedirectURIsSent_DoesNotWriteLocationHeader(t 
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -426,7 +458,9 @@ func TestAuthorizationEndpoint_HappyPath_ScopeSent_WritesAuthzCode(t *testing.T)
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", ScopeFullAuthorization)
 	rsp := httptest.NewRecorder()
@@ -450,7 +484,9 @@ func TestAuthorizationEndpoint_BadScopeSent_WritesInvalidScope(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "BadScope")
 	rsp := httptest.NewRecorder()
@@ -474,7 +510,9 @@ func TestAuthorizationEndpoint_BadScopeSent_DoesNotWriteCode(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "BadScope")
 	rsp := httptest.NewRecorder()
@@ -498,7 +536,9 @@ func TestAuthorizationEndpoint_TwoScopesSent_WritesInvalidRequest(t *testing.T) 
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -526,7 +566,9 @@ func TestAuthorizationEndpoint_TwoScopesSent_DoesNotWriteCode(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -554,7 +596,9 @@ func TestAuthorizationEndpoint_ImplicitResponseType_WritesErrorResponse(t *testi
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -582,7 +626,9 @@ func TestAuthorizationEndpoint_ImplicitResponseType_DoesNotWriteCode(t *testing.
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -610,7 +656,9 @@ func TestAuthorizationEndpoint_ImplicitResponseType_DoesNotWriteToken(t *testing
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -638,7 +686,9 @@ func TestAuthorizationEndpoint_TwoResposneTypesSent_WritesInvalidRequest(t *test
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -666,7 +716,9 @@ func TestAuthorizationEndpoint_TwoResposneTypesSent_DoesNotWriteCode(t *testing.
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -698,7 +750,9 @@ func TestAuthorizationEndpoint_UnknownClientID_Returns400(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, uuid.New(), testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -721,7 +775,9 @@ func TestAuthorizationEndpoint_UnknownClientID_DoesNotWriteLocationHeader(t *tes
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, uuid.New(), testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -742,7 +798,9 @@ func TestAuthorizationEndpoint_MalformedClientID_Returns400(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, uuid.New(), testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -765,7 +823,9 @@ func TestAuthorizationEndpoint_MalformedClientID_DoesNotWriteLocationHeader(t *t
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, uuid.New(), testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -790,7 +850,9 @@ func TestAuthorizationEndpoint_ClientIDNotSent_Returns400(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, uuid.New(), testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -813,7 +875,9 @@ func TestAuthorizationEndpoint_ClientIDNotSent_DoesNotWriteLocationHeader(t *tes
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, uuid.New(), testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -838,7 +902,9 @@ func TestAuthorizationEndpoint_TwoClientIDs_Returns400(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, uuid.New(), testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -861,7 +927,9 @@ func TestAuthorizationEndpoint_TwoClientIDs_DoesNotWriteLocationHeader(t *testin
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, uuid.New(), testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -893,7 +961,9 @@ func TestAuthorizationEndpoint_MalformedRegisteredRedirectURI_Returns500(t *test
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -919,7 +989,9 @@ func TestAuthorizationEndpoint_MalformedRegisteredRedirectURI_DoesNotWriteLocati
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -944,7 +1016,9 @@ func TestAuthorizationEndpoint_ErrorWritingCode_WritesErrorResponse(t *testing.T
 		},
 	}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()
@@ -972,7 +1046,9 @@ func TestAuthorizationEndpoint_ErrorWritingCode_DoesNotWriteCode(t *testing.T) {
 		},
 	}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	req := buildAuthzCodeRequest(ctx, testClient.ID, testUser.Name, testUser.Password, "", "", "")
 	rsp := httptest.NewRecorder()

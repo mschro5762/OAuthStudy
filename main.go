@@ -70,7 +70,7 @@ func startWebServer(ctx context.Context, config config) {
 			zap.Error(err))
 	}
 	authzServer := oauth.NewAuthTokenService(ctx, config.AuthTokenService, encrypter)
-	oauthEndpoints := oauth.NewWebEndpoints(ctx, authzServer, userSvc, clientRegistry)
+	oauthEndpoints := oauth.NewWebEndpoints(ctx, config.AuthTokenService, authzServer, userSvc, clientRegistry)
 
 	router := mux.NewRouter()
 

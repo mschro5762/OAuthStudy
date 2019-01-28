@@ -14,8 +14,13 @@ import (
 )
 
 type EncrypterFake struct {
+	NameFunc    func() string
 	EncryptFunc func(ctx context.Context, cleartext []byte) ([]byte, error)
 	DecryptFunc func(ctx context.Context, ciphertext []byte) ([]byte, error)
+}
+
+func (fake *EncrypterFake) Name() string {
+	return "Fake"
 }
 
 func (fake *EncrypterFake) Encrypt(ctx context.Context, cleartext []byte) ([]byte, error) {

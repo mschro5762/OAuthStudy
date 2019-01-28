@@ -114,13 +114,13 @@ func (fake *userServiceFake) ValidatePassword(ctx context.Context, user users.Us
 var testAuthzCode = "testcode"
 
 type authzServiceFake struct {
-	CreateAuthorizationCodeFunc   func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, error)
+	CreateAuthorizationCodeFunc   func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID, redirectURISent bool) ([]byte, error)
 	ValidateAuthorizationCodeFunc func(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, error)
 }
 
-func (fake *authzServiceFake) CreateAuthorizationCode(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, error) {
+func (fake *authzServiceFake) CreateAuthorizationCode(ctx context.Context, userID uuid.UUID, clientID uuid.UUID, redirectURISent bool) ([]byte, error) {
 	if fake.CreateAuthorizationCodeFunc != nil {
-		return fake.CreateAuthorizationCodeFunc(ctx, userID, clientID)
+		return fake.CreateAuthorizationCodeFunc(ctx, userID, clientID, redirectURISent)
 	}
 
 	return []byte(testAuthzCode), nil
@@ -141,7 +141,9 @@ func TestNewWebEndpoints_HappyPath_ReturnsEndpoints(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
 
 	if endpoints == nil {
 		t.Fail()
@@ -160,7 +162,9 @@ func TestNewWebEndpoints_AuthSvcNil_Panics(t *testing.T) {
 	clientSvc := clientRegistryServiceFake{}
 	userSvc := userServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, nil, &userSvc, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, nil, &userSvc, &clientSvc)
 
 	if endpoints == nil {
 		t.Fail()
@@ -179,7 +183,9 @@ func TestNewWebEndpoints_UserSvcNil_Panics(t *testing.T) {
 	clientSvc := clientRegistryServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, nil, &clientSvc)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, nil, &clientSvc)
 
 	if endpoints == nil {
 		t.Fail()
@@ -198,7 +204,9 @@ func TestNewWebEndpoints_ClientSvcNil_Panics(t *testing.T) {
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{}
 
-	endpoints := NewWebEndpoints(ctx, &authzSvc, &userSvc, nil)
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, nil)
 
 	if endpoints == nil {
 		t.Fail()

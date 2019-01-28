@@ -40,13 +40,14 @@ type IWebEndpoints interface {
 
 // WebEndpoints Type containing the OAuth endpoints.
 type WebEndpoints struct {
+	authConfig   AuthTokenServiceConfig
 	authTokenSvc IAuthTokenService
 	userSvc      users.IUserService
 	clientSvc    clients.IClientRegistryService
 }
 
 // NewWebEndpoints constructs a new WebEndpoints object
-func NewWebEndpoints(ctx context.Context, authSvc IAuthTokenService, userSvc users.IUserService, clientSvc clients.IClientRegistryService) *WebEndpoints {
+func NewWebEndpoints(ctx context.Context, authConfig AuthTokenServiceConfig, authSvc IAuthTokenService, userSvc users.IUserService, clientSvc clients.IClientRegistryService) *WebEndpoints {
 	if authSvc == nil {
 		panic("Nil authSvc")
 	}
@@ -59,7 +60,10 @@ func NewWebEndpoints(ctx context.Context, authSvc IAuthTokenService, userSvc use
 		panic("Nil clientSvc")
 	}
 
+	authConfig = buildConfig(ctx, authConfig)
+
 	newEndpoints := WebEndpoints{
+		authConfig:   authConfig,
 		authTokenSvc: authSvc,
 		userSvc:      userSvc,
 		clientSvc:    clientSvc,
