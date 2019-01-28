@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"strings"
@@ -15,7 +16,7 @@ type HMACSHA256Signer struct {
 }
 
 // NewHMACSHA256Signer Creates a new NewHMACSHA256Signer
-func NewHMACSHA256Signer(signingKey []byte) HMACSHA256Signer {
+func NewHMACSHA256Signer(ctx context.Context, signingKey []byte) *HMACSHA256Signer {
 	if signingKey == nil || strings.TrimSpace(string(signingKey)) == "" {
 		panic("Nil argument: signing key")
 	}
@@ -24,7 +25,7 @@ func NewHMACSHA256Signer(signingKey []byte) HMACSHA256Signer {
 		signingKey: signingKey,
 	}
 
-	return newSigner
+	return &newSigner
 }
 
 // Name The name of the signer

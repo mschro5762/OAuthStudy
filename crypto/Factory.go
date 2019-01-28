@@ -12,7 +12,7 @@ import (
 )
 
 // NewEncrypter Factory method for encrypters.
-func NewEncrypter(ctx context.Context, config EncrypterConfig) (IEncrypter, error) {
+func NewEncrypter(ctx context.Context, config CryptoConfig) (IEncrypter, error) {
 	logger := contexthelper.LoggerFromContext(ctx)
 
 	logger.Info("Building encrypter",
@@ -26,6 +26,26 @@ func NewEncrypter(ctx context.Context, config EncrypterConfig) (IEncrypter, erro
 			return nil, err
 		}
 		return NewAesEncrypter(ctx, key), nil
+	default:
+		return nil, errors.New("Unknown algorithm")
+	}
+}
+
+// NewSigner Factory method for signers
+func NewSigner(ctx context.Context, config CryptoConfig) (ISigner, error) {
+	logger := contexthelper.LoggerFromContext(ctx)
+
+	logger.Info("Building signer",
+		zap.String("algoritm", config.Name),
+		zap.String("keyFile", config.KeyFile))
+
+	switch strings.ToLower(config.Name) {
+	case strings.ToLower(HMACSHA256SignerName):
+		key, err := loadAesKeyFile(config.KeyFile)
+		if err != nil {
+			return nil, err
+		}
+		return NewHMACSHA256Signer(ctx, key), nil
 	default:
 		return nil, errors.New("Unknown algorithm")
 	}

@@ -3,12 +3,17 @@ package crypto
 import (
 	"bytes"
 	"testing"
+
+	"github.com/mschro5762/OAuthStudy/contexthelper"
+	"go.uber.org/zap"
 )
 
 const testHMACKey = "thisisatestkeythisisatestkey"
 
 func TestHMACSHA256Signer_Name_ReturnsName(t *testing.T) {
-	signer := NewHMACSHA256Signer([]byte(testHMACKey))
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	signer := NewHMACSHA256Signer(ctx, []byte(testHMACKey))
 
 	expectedName := HMACSHA256SignerName
 	actualname := signer.Name()
@@ -19,9 +24,11 @@ func TestHMACSHA256Signer_Name_ReturnsName(t *testing.T) {
 }
 
 func TestHMACSHA256Signer_Ctor_HappyPath_AssignsKey(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
 	expectedKey := testHMACKey
 
-	signer := NewHMACSHA256Signer([]byte(expectedKey))
+	signer := NewHMACSHA256Signer(ctx, []byte(expectedKey))
 
 	if string(signer.signingKey) != expectedKey {
 		t.Fail()
@@ -35,7 +42,9 @@ func TestHMACSHA256Signer_Ctor_KeyNil_Panics(t *testing.T) {
 		}
 	}()
 
-	NewHMACSHA256Signer(nil)
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	NewHMACSHA256Signer(ctx, nil)
 }
 
 func TestHMACSHA256Signer_Ctor_KeyEmpty_Panics(t *testing.T) {
@@ -45,13 +54,17 @@ func TestHMACSHA256Signer_Ctor_KeyEmpty_Panics(t *testing.T) {
 		}
 	}()
 
-	NewHMACSHA256Signer([]byte(""))
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	NewHMACSHA256Signer(ctx, []byte(""))
 }
 
 func TestHMACSHA256Signer_BuildSignature_HappyPath_ReturnsSigature(t *testing.T) {
 	payload := "foo"
 
-	signer := NewHMACSHA256Signer([]byte(testHMACKey))
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	signer := NewHMACSHA256Signer(ctx, []byte(testHMACKey))
 
 	signature, _ := signer.BuildSignature([]byte(payload))
 
@@ -63,7 +76,9 @@ func TestHMACSHA256Signer_BuildSignature_HappyPath_ReturnsSigature(t *testing.T)
 func TestHMACSHA256Signer_BuildSignature_HappyPath_ReturnsConsistantSigature(t *testing.T) {
 	payload := "foo"
 
-	signer := NewHMACSHA256Signer([]byte(testHMACKey))
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	signer := NewHMACSHA256Signer(ctx, []byte(testHMACKey))
 
 	signature1, _ := signer.BuildSignature([]byte(payload))
 	signature2, _ := signer.BuildSignature([]byte(payload))
