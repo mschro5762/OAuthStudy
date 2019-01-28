@@ -25,10 +25,13 @@ const (
 
 // AuthTokenServiceConfig Configuration for the Authorization Service
 type AuthTokenServiceConfig struct {
-	IssuerURI            string                 `json:"issuerUri"`
-	AuthzCodeCrypto      crypto.EncrypterConfig `json:"authzCodeCrypto"`
-	AuthzCodeTTLString   string                 `json:"authzCodeTtl"`   // A time.Duration string
-	AccessTokenTTLString string                 `json:"accessTokenTtl"` // A time.Duration string
+	IssuerURI            string        `json:"issuerUri"`
+	AuthzCodeCrypto      crypto.Config `json:"authzCodeCrypto"`
+	AuthzCodeSigning     crypto.Config `json:"authzCodeSigning"`
+	AuthzCodeTTLString   string        `json:"authzCodeTtl"` // A time.Duration string
+	AccessTokenCrypto    crypto.Config `json:"accessTokenCrypto"`
+	AccessTokenSigning   crypto.Config `json:"accessTokenSigning"`
+	AccessTokenTTLString string        `json:"accessTokenTtl"` // A time.Duration string
 	authzCodeTTL         time.Duration
 	accessTokenTTL       time.Duration
 }

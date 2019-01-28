@@ -13,9 +13,21 @@
     "issuerUri": "https://example.com",
     "authzCodeCrypto": {
       "name": "AES256-GCM",
-      "keyFile": "./cryptoKeys/authztoken.1.key"
+      "keyFile": "./cryptoKeys/aes.1.key"
+    },
+    "authzCodeSigning": {
+      "name": "HMAC+SHA256",
+      "keyfile": "./cryptokeys/sha.1.key"
     },
     "authzCodeTtl": "30s",
-    "accessTokenTtl": "30m"
+    "accessTokenCrypto": {
+      "name": "AES256-GCM",
+      "keyFile": "./cryptoKeys/aes.1.key"
+    },
+    "accessTokenSigning": {
+      "name": "HMAC+SHA256",
+      "keyfile": "./cryptokeys/sha.1.key"
+    },
+   "accessTokenTtl": "30m"
   }
 }

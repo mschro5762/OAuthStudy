@@ -12,7 +12,7 @@ import (
 )
 
 // NewEncrypter Factory method for encrypters.
-func NewEncrypter(ctx context.Context, config CryptoConfig) (IEncrypter, error) {
+func NewEncrypter(ctx context.Context, config Config) (IEncrypter, error) {
 	logger := contexthelper.LoggerFromContext(ctx)
 
 	logger.Info("Building encrypter",
@@ -32,7 +32,7 @@ func NewEncrypter(ctx context.Context, config CryptoConfig) (IEncrypter, error) 
 }
 
 // NewSigner Factory method for signers
-func NewSigner(ctx context.Context, config CryptoConfig) (ISigner, error) {
+func NewSigner(ctx context.Context, config Config) (ISigner, error) {
 	logger := contexthelper.LoggerFromContext(ctx)
 
 	logger.Info("Building signer",
