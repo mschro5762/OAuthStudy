@@ -20,7 +20,7 @@ func NewEncrypter(ctx context.Context, config EncrypterConfig) (IEncrypter, erro
 		zap.String("keyFile", config.KeyFile))
 
 	switch strings.ToLower(config.Name) {
-	case "aes256-gcm":
+	case strings.ToLower(AesEncrypterName):
 		key, err := loadAesKeyFile(config.KeyFile)
 		if err != nil {
 			return nil, err

@@ -1,8 +1,9 @@
 package crypto
 
 import (
-	"github.com/mschro5762/OAuthStudy/contexthelper"
 	"testing"
+
+	"github.com/mschro5762/OAuthStudy/contexthelper"
 
 	"go.uber.org/zap"
 )
@@ -61,6 +62,19 @@ func TestAesEncrypter_Ctor_EmptyKey_Panics(t *testing.T) {
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
 	NewAesEncrypter(ctx, make([]byte, 0))
+}
+
+func TestAesEncrypter_Name_ReturnsName(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	encrypter := NewAesEncrypter(ctx, []byte(testAesKey))
+
+	expectedName := AesEncrypterName
+	actualName := encrypter.Name()
+
+	if actualName != expectedName {
+		t.Fail()
+	}
 }
 
 func TestAesEncrypter_EncryptionRoundTrip_ProducesExpectedCleartext(t *testing.T) {

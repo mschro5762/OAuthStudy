@@ -13,6 +13,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// AesEncrypterName The name of the AES encrypter
+const AesEncrypterName = "AES256-GCM"
+
 // AesEncrypter Type that encapsulates AES encryption and decryption
 type AesEncrypter struct {
 	encryptionKey []byte
@@ -37,6 +40,11 @@ func NewAesEncrypter(ctx context.Context, key []byte) *AesEncrypter {
 	}
 
 	return &newEncrypter
+}
+
+// Name The name of the encrypter
+func (encrypter *AesEncrypter) Name() string {
+	return AesEncrypterName
 }
 
 // Encrypt Encrypts a cleartext message
