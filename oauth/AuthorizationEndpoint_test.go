@@ -1011,7 +1011,7 @@ func TestAuthorizationEndpoint_ErrorWritingCode_WritesErrorResponse(t *testing.T
 	clientSvc := clientRegistryServiceFake{}
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{
-		CreateAuthorizationCodeFunc: func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, error) {
+		CreateAuthorizationCodeFunc: func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID, redirectURISent bool) ([]byte, error) {
 			return nil, errors.New("test error")
 		},
 	}
@@ -1041,7 +1041,7 @@ func TestAuthorizationEndpoint_ErrorWritingCode_DoesNotWriteCode(t *testing.T) {
 	clientSvc := clientRegistryServiceFake{}
 	userSvc := userServiceFake{}
 	authzSvc := authzServiceFake{
-		CreateAuthorizationCodeFunc: func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, error) {
+		CreateAuthorizationCodeFunc: func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID, redirectURISent bool) ([]byte, error) {
 			return nil, errors.New("test error")
 		},
 	}
