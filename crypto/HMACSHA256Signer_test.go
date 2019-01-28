@@ -66,7 +66,7 @@ func TestHMACSHA256Signer_BuildSignature_HappyPath_ReturnsSigature(t *testing.T)
 
 	signer := NewHMACSHA256Signer(ctx, []byte(testHMACKey))
 
-	signature, _ := signer.BuildSignature([]byte(payload))
+	signature, _ := signer.BuildSignature(ctx, []byte(payload))
 
 	if signature == nil {
 		t.Fail()
@@ -80,8 +80,8 @@ func TestHMACSHA256Signer_BuildSignature_HappyPath_ReturnsConsistantSigature(t *
 
 	signer := NewHMACSHA256Signer(ctx, []byte(testHMACKey))
 
-	signature1, _ := signer.BuildSignature([]byte(payload))
-	signature2, _ := signer.BuildSignature([]byte(payload))
+	signature1, _ := signer.BuildSignature(ctx, []byte(payload))
+	signature2, _ := signer.BuildSignature(ctx, []byte(payload))
 
 	if !bytes.Equal(signature1, signature2) {
 		t.Fail()

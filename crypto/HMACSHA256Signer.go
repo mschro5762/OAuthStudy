@@ -34,7 +34,7 @@ func (signer *HMACSHA256Signer) Name() string {
 }
 
 // BuildSignature Creates a signature for a payload
-func (signer *HMACSHA256Signer) BuildSignature(payload []byte) ([]byte, error) {
+func (signer *HMACSHA256Signer) BuildSignature(ctx context.Context, payload []byte) ([]byte, error) {
 	h := hmac.New(sha256.New, signer.signingKey)
 
 	_, err := h.Write(payload)
