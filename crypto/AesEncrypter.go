@@ -66,9 +66,9 @@ func (encrypter *AesEncrypter) Encrypt(ctx context.Context, cleartext []byte) ([
 		return nil, err
 	}
 
-	cyphertext := gcm.Seal(iv, iv, cleartext, nil)
+	ciphertext := gcm.Seal(iv, iv, cleartext, nil)
 
-	return cyphertext, nil
+	return ciphertext, nil
 }
 
 // Decrypt Decrypts a cyphertext message
