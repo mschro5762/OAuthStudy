@@ -266,7 +266,7 @@ func writeAuthorizationCodeResponseRedirect(ctx context.Context, client clients.
 		return err
 	}
 
-	encodedCode := base64.StdEncoding.EncodeToString(authorizationCode)
+	encodedCode := base64.URLEncoding.EncodeToString(authorizationCode)
 
 	query := redirectURI.Query()
 	query.Add("code", string(encodedCode))

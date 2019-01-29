@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -126,7 +127,8 @@ func TestAuthorizationEndpoint_HappyPath_WritesAuthzCode(t *testing.T) {
 
 	redirectQuery := redirectURL.Query()
 
-	if redirectQuery.Get("code") != testAuthzCode {
+	expectedCode := base64.URLEncoding.EncodeToString([]byte(testAuthzCode))
+	if redirectQuery.Get("code") != expectedCode {
 		t.Fail()
 	}
 }
@@ -472,7 +474,8 @@ func TestAuthorizationEndpoint_HappyPath_ScopeSent_WritesAuthzCode(t *testing.T)
 
 	redirectQuery := redirectURL.Query()
 
-	if redirectQuery.Get("code") != testAuthzCode {
+	expectedCode := base64.URLEncoding.EncodeToString([]byte(testAuthzCode))
+	if redirectQuery.Get("code") != expectedCode {
 		t.Fail()
 	}
 }
