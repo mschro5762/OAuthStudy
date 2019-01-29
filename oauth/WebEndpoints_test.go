@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -115,7 +116,8 @@ var testAuthzCode = "testcode"
 
 type authzServiceFake struct {
 	CreateAuthorizationCodeFunc   func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID, redirectURISent bool) ([]byte, error)
-	ValidateAuthorizationCodeFunc func(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, error)
+	ValidateAuthorizationCodeFunc func(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, uuid.UUID, error)
+	BuildAccessTokenFunc          func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Time, error)
 }
 
 func (fake *authzServiceFake) CreateAuthorizationCode(ctx context.Context, userID uuid.UUID, clientID uuid.UUID, redirectURISent bool) ([]byte, error) {
@@ -126,12 +128,20 @@ func (fake *authzServiceFake) CreateAuthorizationCode(ctx context.Context, userI
 	return []byte(testAuthzCode), nil
 }
 
-func (fake *authzServiceFake) ValidateAuthorizationCode(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, error) {
+func (fake *authzServiceFake) ValidateAuthorizationCode(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, uuid.UUID, error) {
 	if fake.ValidateAuthorizationCodeFunc != nil {
 		return fake.ValidateAuthorizationCodeFunc(ctx, client, authzCode, redirectURI)
 	}
 
-	return false, nil
+	return false, uuid.UUID{}, nil
+}
+
+func (fake *authzServiceFake) BuildAccessToken(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Time, error) {
+	if fake.BuildAccessTokenFunc != nil {
+		return fake.BuildAccessTokenFunc(ctx, userID, clientID)
+	}
+
+	return nil, time.Time{}, nil
 }
 
 func TestNewWebEndpoints_HappyPath_ReturnsEndpoints(t *testing.T) {
