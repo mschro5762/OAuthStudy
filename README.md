@@ -20,6 +20,14 @@ long and I don't know if I like this. (maybe it's just the URL encoding)  I use 
 ensure that if multiple copies of this service are running side-by-side, they can remain as stateless as
 possible.
 
+For Access Tokens, I explored a different route.  I just used a standard JWS.
+
+> Using self-describing tokens is all well and good, and there's no reason to not use them, but the goal
+> of keeping the serivce completely stateless has already shown some cracks.  Specifically, the need to
+> use Authoriztion Codes as nonces, as well as Access token revocation.  Both of those requires a cache.
+> For this project an in-memory repository will suffice, but in an actual deployment, a Redis cache would
+> be the right choice.
+
 File repositories are currently used for development as they are easier than spinning up a DB.  However, I
 have not written any unit tests for them, so they drag the coverage numbers down a bit.
 
@@ -59,6 +67,7 @@ Users
 Clients
 - [x] Registration
 - [x] Secret regeneration
+- [ ] Different Token grant types
 
 ### OAuth functionality
 
@@ -69,16 +78,20 @@ Clients
 - [x] Generates a self descriptive object that is encrypted and sent
 - [ ] Add a web page for Resource Owner to actively consent to Client authorization
 - [ ] Add a system to handle more than one scope
-    - [ ] Add scope to Authorization Code
+    - Add scope to Authorization Code
 - [ ] Sign Authorization Codes
 - [ ] PKCE protection (RFC 7636)
 
 #### Token endpoint
-- [ ] Endpoint works
-- [ ] Require Client authentication for non-public Clients
+- [x] Endpoint works
+    - [ ] Write unit tests
+- [x] Require Client authentication for non-public Clients
+- [ ] Authorization Codes are only usable once
+- [ ] Token revocation cache
 - [ ] Token revocation on Client secret regeneration
-- [ ] After more than one scope is defined, check that scopes in the Authorization Code are allowed by the Resource Owner
+- [ ] After more than one scope is defined, check that scopes in the Authorization Code are still allowed by the Resource Owner
 - [ ] Issue refresh tokens
+- [x] Add issuer URI configuration
 - [x] BUG: memoize in Authorization Code whether or not a redirect_uri param was sent.  This is required by the Token endpoint to match to the original request.  The query values added to the redirect URI by the Authorization endpoint means that a Client cannot simply take the URI sent to the Redirect Endpoint and add it to the params to the Token Endpoint.  Whether or not a Client originally sent a redirect_uri param to the Authorization Endpoint is known to it, so it will know whether or not to send it to the Token Endpoint, as well as what the value actually is.
 
 ### OpenID Connect
@@ -95,9 +108,11 @@ Clients
     - [ ] Make body size limit configurable
 
 ### Other
-- [ ] Add Postman collection for live testing
+- [x] Add Postman collection for live testing
 - [ ] Support more than one configured decrypter to allow for rolling updates when keys are rotated
 - [ ] Move file repositories into their own package to get accurate coverage numbers
+- [ ] Make endpoint paths configurable.  (Goes to user info endpoint aud claim)
+- [ ] Move Access Token JWS code to a JWT package
 
 ## Unit Tests
 Most features have a solid body of unit tests.  My basic philosophy is that every semantic of an API
