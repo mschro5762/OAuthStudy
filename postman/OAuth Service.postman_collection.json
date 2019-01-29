@@ -1,0 +1,255 @@
+{
+	"info": {
+		"_postman_id": "8aefca71-d6b6-4e53-a570-414b3bd44b49",
+		"name": "OAuth Service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Client Administration",
+			"item": [
+				{
+					"name": "Register Client",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ae40c436-eaf8-43d7-9e65-9ac35a526f7b",
+								"exec": [
+									"var responseJson = pm.response.json();",
+									"",
+									"pm.environment.set(\"ClientId\", responseJson.id);",
+									"pm.environment.set(\"ClientSecret\", responseJson.secret);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Test Client 1\",\n\t\"isConfidential\": true,\n\t\"redirectUri\": \"https://foo.com/authzredirect\"\n}"
+						},
+						"url": {
+							"raw": "{{ClientService}}/clients",
+							"host": [
+								"{{ClientService}}"
+							],
+							"path": [
+								"clients"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate new client secret",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "bf9185a4-218c-4162-bec9-24652d816fa0",
+								"exec": [
+									"pm.environment.set(\"ClientSecret\", responseBody);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{ClientService}}/clients{{ClientId}}/newsecret",
+							"host": [
+								"{{ClientService}}"
+							],
+							"path": [
+								"clients{{ClientId}}",
+								"newsecret"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Administration",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"{{TestUserName}}\",\n\t\"password\": \"{{TestUserPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{UserService}}/users",
+							"host": [
+								"{{UserService}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tokens",
+			"item": [
+				{
+					"name": "Authorization request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "81fc3b9c-9a1c-4df6-bc3e-a3f70ec19a64",
+								"exec": [
+									"url = require(\"url\")",
+									"",
+									"location = postman.getResponseHeader(\"Location\")",
+									"",
+									"loc = url.parse(location)",
+									"console.log(loc)",
+									"",
+									"// Postman's URL object sucks, we have to parse the query string ourselves",
+									"code = loc.query.split(\"=\")[1]",
+									"console.log(code)",
+									"",
+									"pm.environment.set(\"authorizationCode\", code);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{TestUserPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{TestUserName}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{AuthService}}/authorize?response_type=code&client_id={{ClientId}}",
+							"host": [
+								"{{AuthService}}"
+							],
+							"path": [
+								"authorize"
+							],
+							"query": [
+								{
+									"key": "response_type",
+									"value": "code"
+								},
+								{
+									"key": "client_id",
+									"value": "{{ClientId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Token Request",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{ClientSecret}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{ClientId}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "authorization_code",
+									"type": "text"
+								},
+								{
+									"key": "code",
+									"value": "{{authorizationCode}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{AuthService}}/token",
+							"host": [
+								"{{AuthService}}"
+							],
+							"path": [
+								"token"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
