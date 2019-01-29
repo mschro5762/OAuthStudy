@@ -66,10 +66,17 @@ func startWebServer(ctx context.Context, config config) {
 
 	encrypter, err := crypto.NewEncrypter(ctx, config.AuthTokenService.AuthzCodeCrypto)
 	if err != nil {
-		logger.Panic("StartWebServer: Unable to create user registry endpoints",
+		logger.Panic("StartWebServer: Unable to create authz encrypter",
 			zap.Error(err))
 	}
-	authzServer := oauth.NewAuthTokenService(ctx, config.AuthTokenService, encrypter)
+
+	signer, err := crypto.NewSigner(ctx, config.AuthTokenService.AccessTokenSigning)
+	if err != nil {
+		logger.Panic("StartWebServer: Unable to create user authz signer",
+			zap.Error(err))
+	}
+
+	authzServer := oauth.NewAuthTokenService(ctx, config.AuthTokenService, encrypter, signer)
 	oauthEndpoints := oauth.NewWebEndpoints(ctx, config.AuthTokenService, authzServer, userSvc, clientRegistry)
 
 	router := mux.NewRouter()
@@ -87,6 +94,9 @@ func startWebServer(ctx context.Context, config config) {
 
 	router.Handle("/authorize", middleware.CommonHandlers(
 		http.HandlerFunc(oauthEndpoints.AuthorizationEndpoint))).Methods("GET", "POST")
+
+	router.Handle("/token", middleware.CommonHandlers(
+		http.HandlerFunc(oauthEndpoints.TokenEndpoint))).Methods("POST")
 
 	logger.Info("Starting web server")
 	serverErr := http.ListenAndServe(fmt.Sprintf("%v", config.WebServer.Address), router)
