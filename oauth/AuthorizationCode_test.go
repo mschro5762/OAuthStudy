@@ -13,33 +13,6 @@ import (
 	"github.com/mschro5762/OAuthStudy/contexthelper"
 )
 
-type EncrypterFake struct {
-	NameFunc    func() string
-	EncryptFunc func(ctx context.Context, cleartext []byte) ([]byte, error)
-	DecryptFunc func(ctx context.Context, ciphertext []byte) ([]byte, error)
-}
-
-func (fake *EncrypterFake) Name() string {
-	return "Fake"
-}
-
-func (fake *EncrypterFake) Encrypt(ctx context.Context, cleartext []byte) ([]byte, error) {
-	if fake.EncryptFunc != nil {
-		return fake.EncryptFunc(ctx, cleartext)
-	}
-
-	return cleartext, nil
-}
-
-// Decrypt Decrypts a cyphertext message
-func (fake *EncrypterFake) Decrypt(ctx context.Context, ciphertext []byte) ([]byte, error) {
-	if fake.DecryptFunc != nil {
-		return fake.DecryptFunc(ctx, ciphertext)
-	}
-
-	return ciphertext, nil
-}
-
 func TestAuthorizationCodeBinaryEncoding(t *testing.T) {
 	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 	expiryTime, _ := time.ParseDuration("5m")
@@ -262,7 +235,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_HappyPath_ReturnsTrue(t *tes
 
 	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
+	isValid, _, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if !isValid {
 		t.Fail()
@@ -289,7 +262,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_HappyPath_ReturnsNilError(t 
 
 	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
+	_, _, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if err != nil {
 		t.Fail()
@@ -319,7 +292,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_CodeExpired_ReturnsFalse(t *
 	sleepDuration, _ := time.ParseDuration("5ms")
 	time.Sleep(sleepDuration)
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
+	isValid, _, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if isValid {
 		t.Fail()
@@ -349,7 +322,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_CodeExpired_ReturnsNilError(
 	sleepDuration, _ := time.ParseDuration("5ms")
 	time.Sleep(sleepDuration)
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
+	_, _, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if err != nil {
 		t.Fail()
@@ -380,7 +353,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_ClientMismatch_ReturnsFalse(
 		ID: uuid.New(),
 	}
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, badClient, authzCode, "")
+	isValid, _, _ := authSvc.ValidateAuthorizationCode(ctx, badClient, authzCode, "")
 
 	if isValid {
 		t.Fail()
@@ -411,7 +384,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_ClientMismatch_ReturnsNilErr
 		ID: uuid.New(),
 	}
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, badClient, authzCode, "")
+	_, _, err := authSvc.ValidateAuthorizationCode(ctx, badClient, authzCode, "")
 
 	if err != nil {
 		t.Fail()
@@ -442,7 +415,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_DecryptionError_ReturnsFalse
 
 	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
+	isValid, _, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if isValid {
 		t.Fail()
@@ -473,7 +446,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_DecryptionError_ReturnsError
 
 	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
+	_, _, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if err == nil {
 		t.Fail()
@@ -497,7 +470,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_DeserializationError_Returns
 		encrypter: &encrypterFake,
 	}
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, []byte("BadCode"), "")
+	isValid, _, _ := authSvc.ValidateAuthorizationCode(ctx, client, []byte("BadCode"), "")
 
 	if isValid {
 		t.Fail()
@@ -521,7 +494,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_DeserializationError_Returns
 		encrypter: &encrypterFake,
 	}
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, client, []byte("BadCode"), "")
+	_, _, err := authSvc.ValidateAuthorizationCode(ctx, client, []byte("BadCode"), "")
 
 	if err == nil {
 		t.Fail()
@@ -549,7 +522,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_HappyPath_Re
 
 	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, true)
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, client.RedirectURI)
+	isValid, _, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, client.RedirectURI)
 
 	if !isValid {
 		t.Fail()
@@ -577,7 +550,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_HappyPath_Re
 
 	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, true)
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, client.RedirectURI)
+	_, _, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, client.RedirectURI)
 
 	if err != nil {
 		t.Fail()
@@ -604,7 +577,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_RedirectURINotSent_RedirectU
 
 	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, client.RedirectURI)
+	isValid, _, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, client.RedirectURI)
 
 	if !isValid {
 		t.Fail()
@@ -631,7 +604,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_RedirectURINotSent_RedirectU
 
 	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, false)
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "urn:testuri")
+	_, _, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "urn:testuri")
 
 	if err != nil {
 		t.Fail()
@@ -659,7 +632,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_URIMismatch_
 
 	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, true)
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "bad URI")
+	isValid, _, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "bad URI")
 
 	if isValid {
 		t.Fail()
@@ -687,7 +660,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_URIMismatch_
 
 	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, true)
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "bad URI")
+	_, _, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "bad URI")
 
 	if err != nil {
 		t.Fail()
@@ -715,7 +688,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_EmptyURIPara
 
 	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, true)
 
-	isValid, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
+	isValid, _, _ := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if isValid {
 		t.Fail()
@@ -743,7 +716,7 @@ func TestAuthtokenService_ValidateAuthorizationCode_RedirectURISent_EmptyURIPara
 
 	authzCode, _ := authSvc.CreateAuthorizationCode(ctx, userID, client.ID, true)
 
-	_, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
+	_, _, err := authSvc.ValidateAuthorizationCode(ctx, client, authzCode, "")
 
 	if err != nil {
 		t.Fail()

@@ -65,7 +65,7 @@ func (tokenSvc *AuthTokenService) CreateAuthorizationCode(ctx context.Context, u
 
 // ValidateAuthorizationCode Validates that a given authorization code is valid.
 // Tests that the code is within it's lifetime, and that it was requested for the given client.
-func (tokenSvc *AuthTokenService) ValidateAuthorizationCode(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, error) {
+func (tokenSvc *AuthTokenService) ValidateAuthorizationCode(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, uuid.UUID, error) {
 	logger := contexthelper.LoggerFromContext(ctx)
 
 	now := time.Now().UTC()
@@ -73,13 +73,13 @@ func (tokenSvc *AuthTokenService) ValidateAuthorizationCode(ctx context.Context,
 	encodedCode, err := tokenSvc.encrypter.Decrypt(ctx, authzCode)
 	if err != nil {
 		// logging handled by helper method
-		return false, err
+		return false, uuid.UUID{}, err
 	}
 
 	code, err := decodeAuthCode(ctx, encodedCode)
 	if err != nil {
 		// logging handled by helper method
-		return false, err
+		return false, uuid.UUID{}, err
 	}
 
 	logger = logger.With(
@@ -93,23 +93,23 @@ func (tokenSvc *AuthTokenService) ValidateAuthorizationCode(ctx context.Context,
 
 	if code.ExpiresAt.Before(now) || code.IssuedAt.After(now) {
 		logger.Warn("Expired Authorization Code")
-		return false, nil
+		return false, uuid.UUID{}, err
 	}
 
 	if code.ClientID != client.ID {
 		logger.Warn("Authoriztion code not for requesting Client")
-		return false, nil
+		return false, uuid.UUID{}, err
 	}
 
 	if code.RedirectURISent && client.RedirectURI != redirectURI {
 		logger.Warn("Redirect URI mismatch",
 			zap.String("clientRedirectURI", client.RedirectURI),
 			zap.String("redirectURISent", redirectURI))
-		return false, nil
+		return false, uuid.UUID{}, err
 	}
 
 	logger.Info("Authorization code valid")
-	return true, nil
+	return true, code.UserID, nil
 }
 
 func encodeAuthCode(ctx context.Context, authCode authorizationCode) ([]byte, error) {

@@ -39,29 +39,37 @@ type AuthTokenServiceConfig struct {
 // IAuthTokenService Authorization token service interface
 type IAuthTokenService interface {
 	CreateAuthorizationCode(ctx context.Context, userID uuid.UUID, clientID uuid.UUID, redirectURISent bool) ([]byte, error)
-	ValidateAuthorizationCode(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, error)
+	ValidateAuthorizationCode(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, uuid.UUID, error)
+	BuildAccessToken(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Time, error)
 }
 
 // AuthTokenService Authorization token service
 type AuthTokenService struct {
-	config    AuthTokenServiceConfig
-	encrypter crypto.IEncrypter
+	config            AuthTokenServiceConfig
+	encrypter         crypto.IEncrypter
+	accessTokenSigner crypto.ISigner
 }
 
 // NewAuthTokenService Constructs a new AuthTokenService instance
-func NewAuthTokenService(ctx context.Context, config AuthTokenServiceConfig, encrypter crypto.IEncrypter) *AuthTokenService {
+func NewAuthTokenService(ctx context.Context, config AuthTokenServiceConfig, encrypter crypto.IEncrypter, accessTokenSigner crypto.ISigner) *AuthTokenService {
+	logger := contexthelper.LoggerFromContext(ctx)
+
 	if config == (AuthTokenServiceConfig{}) {
-		panic("Empty config passed!")
+		logger.Panic("Empty config passed!")
 	}
 	if encrypter == nil {
-		panic("Nil Argument: encrypter")
+		logger.Panic("Nil Argument: encrypter")
+	}
+	if accessTokenSigner == nil {
+		logger.Panic("Nil Argument: accessTokenSigner")
 	}
 
 	config = buildConfig(ctx, config)
 
 	newSvc := AuthTokenService{
-		config:    config,
-		encrypter: encrypter,
+		config:            config,
+		encrypter:         encrypter,
+		accessTokenSigner: accessTokenSigner,
 	}
 
 	return &newSvc
