@@ -2,15 +2,16 @@ package oauth
 
 import (
 	"context"
+	"encoding/base64"
 	"net/http"
 	"net/url"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"github.com/mschro5762/OAuthStudy/clients"
 	"github.com/mschro5762/OAuthStudy/contexthelper"
 	"github.com/mschro5762/OAuthStudy/logging"
-
-	"go.uber.org/zap"
 )
 
 const authzResponseTypeCode = "code"
@@ -265,8 +266,10 @@ func writeAuthorizationCodeResponseRedirect(ctx context.Context, client clients.
 		return err
 	}
 
+	encodedCode := base64.StdEncoding.EncodeToString(authorizationCode)
+
 	query := redirectURI.Query()
-	query.Add("code", string(authorizationCode))
+	query.Add("code", string(encodedCode))
 	redirectURI.RawQuery = query.Encode()
 
 	writeClientRedirect(ctx, redirectURI, state, rsp)
