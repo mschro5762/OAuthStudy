@@ -76,7 +76,7 @@ func (token *userAccessToken) UnmarshalJSON(data []byte) error {
 }
 
 // BuildAccessToken Builds a new Access token
-func (authSvc *AuthTokenService) BuildAccessToken(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Time, error) {
+func (authSvc *AuthTokenService) BuildAccessToken(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Duration, error) {
 	logger := contexthelper.LoggerFromContext(ctx)
 
 	iat := time.Now().UTC()
@@ -97,10 +97,10 @@ func (authSvc *AuthTokenService) BuildAccessToken(ctx context.Context, userID uu
 	if err != nil {
 		logger.Error("Unable to build access token JWS",
 			zap.Error(err))
-		return nil, time.Time{}, err
+		return nil, time.Duration(0), err
 	}
 
-	return jws, exp, nil
+	return jws, authSvc.config.accessTokenTTL, nil
 }
 
 func (authSvc *AuthTokenService) buildAccessTokenJws(ctx context.Context, token userAccessToken) ([]byte, error) {

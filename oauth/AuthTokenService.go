@@ -40,7 +40,7 @@ type AuthTokenServiceConfig struct {
 type IAuthTokenService interface {
 	CreateAuthorizationCode(ctx context.Context, userID uuid.UUID, clientID uuid.UUID, redirectURISent bool) ([]byte, error)
 	ValidateAuthorizationCode(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, uuid.UUID, error)
-	BuildAccessToken(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Time, error)
+	BuildAccessToken(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Duration, error)
 }
 
 // AuthTokenService Authorization token service

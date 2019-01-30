@@ -305,19 +305,19 @@ func (endpoints *WebEndpoints) writeTokenErrorResponse(ctx context.Context, er s
 type tokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	TokenType    string `json:"token_type"`
-	ExpiresIn    int64  `json:"expires_in"`
+	ExpiresIn    int    `json:"expires_in"`
 	Refreshtoken string `json:"refresh_token,omitempty"`
 	Scope        string `json:"scope,omitempty"`
 }
 
-func (endpoints *WebEndpoints) writeTokenResponse(ctx context.Context, accessToken []byte, accessExpiry time.Time, refreshToken []byte, scope string, rsp http.ResponseWriter) {
+func (endpoints *WebEndpoints) writeTokenResponse(ctx context.Context, accessToken []byte, accessExpiry time.Duration, refreshToken []byte, scope string, rsp http.ResponseWriter) {
 	logger := contexthelper.LoggerFromContext(ctx)
 	logger.Debug(string(accessToken))
 
 	responseObj := tokenResponse{
 		AccessToken:  string(accessToken),
 		TokenType:    "Bearer",
-		ExpiresIn:    accessExpiry.Unix(),
+		ExpiresIn:    int(accessExpiry.Seconds()),
 		Refreshtoken: string(refreshToken),
 		Scope:        scope,
 	}

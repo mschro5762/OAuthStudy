@@ -67,7 +67,7 @@ func (fake *clientRegistryServiceFake) VerifyClientSecret(ctx context.Context, c
 		return fake.VerifyClientSecretFunc(ctx, client, clientSecret)
 	}
 
-	return false, nil
+	return bytes.Equal(client.Secret, []byte(clientSecret)), nil
 }
 
 var testUser = users.User{
@@ -112,12 +112,14 @@ func (fake *userServiceFake) ValidatePassword(ctx context.Context, user users.Us
 	return bytes.Equal(user.Password, clearText), nil
 }
 
-var testAuthzCode = "testcode"
+const testAuthzCode = "testcode"
+const testAccessToken = "testtoken"
+const testAccessTokenExpiry = time.Duration(100000000000)
 
 type authzServiceFake struct {
 	CreateAuthorizationCodeFunc   func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID, redirectURISent bool) ([]byte, error)
 	ValidateAuthorizationCodeFunc func(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, uuid.UUID, error)
-	BuildAccessTokenFunc          func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Time, error)
+	BuildAccessTokenFunc          func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Duration, error)
 }
 
 func (fake *authzServiceFake) CreateAuthorizationCode(ctx context.Context, userID uuid.UUID, clientID uuid.UUID, redirectURISent bool) ([]byte, error) {
@@ -133,15 +135,15 @@ func (fake *authzServiceFake) ValidateAuthorizationCode(ctx context.Context, cli
 		return fake.ValidateAuthorizationCodeFunc(ctx, client, authzCode, redirectURI)
 	}
 
-	return false, uuid.UUID{}, nil
+	return true, testUser.ID, nil
 }
 
-func (fake *authzServiceFake) BuildAccessToken(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Time, error) {
+func (fake *authzServiceFake) BuildAccessToken(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Duration, error) {
 	if fake.BuildAccessTokenFunc != nil {
 		return fake.BuildAccessTokenFunc(ctx, userID, clientID)
 	}
 
-	return nil, time.Time{}, nil
+	return []byte(testAccessToken), testAccessTokenExpiry, nil
 }
 
 func TestNewWebEndpoints_HappyPath_ReturnsEndpoints(t *testing.T) {
