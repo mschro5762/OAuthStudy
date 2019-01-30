@@ -46,6 +46,8 @@ func (endpoints *WebEndpoints) TokenEndpoint(rsp http.ResponseWriter, req *http.
 	ctx := req.Context()
 	logger := contexthelper.LoggerFromContext(ctx)
 
+	req.ParseForm()
+
 	client, canContinue := endpoints.getAndAuthenticateClient(ctx, rsp, req)
 	if !canContinue {
 		// getAndAuthenticateUser will have logged and written to rsp
@@ -56,8 +58,6 @@ func (endpoints *WebEndpoints) TokenEndpoint(rsp http.ResponseWriter, req *http.
 		zap.String(logging.FieldClientID, client.ID.String()))
 	ctx = contexthelper.AddLoggertoContext(ctx, logger)
 	req = req.WithContext(ctx)
-
-	req.ParseForm()
 
 	// Returned grant type is currently not used, only authorization_code supported
 	_, canContinue = endpoints.validateGrantTypeParameter(ctx, rsp, req)
@@ -121,7 +121,7 @@ func (endpoints *WebEndpoints) getAndAuthenticateClient(ctx context.Context, rsp
 
 	clientAuthIDString, clientSecret, basicAuthExists := req.BasicAuth()
 
-	clientIDParams, clientIDParamExists := req.URL.Query()[tokenParamClientID]
+	clientIDParams, clientIDParamExists := req.Form[tokenParamClientID]
 	if clientIDParamExists && len(clientIDParams) != 1 {
 		logger.Warn("Invalid number of client ID parameters")
 		endpoints.writeTokenBadRequestErrorResponse(ctx, tokenErrorInvalidClient, "Invalid client_id parameter count", rsp)
@@ -132,7 +132,7 @@ func (endpoints *WebEndpoints) getAndAuthenticateClient(ctx context.Context, rsp
 		logger.Warn("Clinet ID mismatch between query and auth header",
 			zap.String("authClientID", clientAuthIDString),
 			zap.String("paramClientID", clientIDParams[0]))
-		endpoints.writeTokenBadRequestErrorResponse(ctx, tokenErrorInvalidClient, "Client ID mismatch between query and authentication header", rsp)
+		endpoints.writeTokenAuthErrorResponse(ctx, tokenErrorInvalidClient, "Client ID mismatch between query and authentication header", rsp)
 		return clients.Client{}, false
 	}
 
@@ -167,23 +167,25 @@ func (endpoints *WebEndpoints) getAndAuthenticateClient(ctx context.Context, rsp
 		return clients.Client{}, false
 	}
 
-	if client.IsConfidential && !basicAuthExists {
-		logger.Warn("Client is confidential but authentication was not provided",
-			zap.String(logging.FieldClientID, clientAuthIDString))
-		endpoints.writeTokenAuthErrorResponse(ctx, tokenErrorInvalidClient, "", rsp)
-		return clients.Client{}, false
-	}
+	if client.IsConfidential {
+		if !basicAuthExists {
+			logger.Warn("Client is confidential but authentication was not provided",
+				zap.String(logging.FieldClientID, clientAuthIDString))
+			endpoints.writeTokenAuthErrorResponse(ctx, tokenErrorInvalidClient, "", rsp)
+			return clients.Client{}, false
+		}
 
-	clientAuthed, err := endpoints.clientSvc.VerifyClientSecret(ctx, client, clientSecret)
-	if err != nil {
-		// VerifyClientSecret will have logged
-		rsp.WriteHeader(http.StatusInternalServerError)
-		return clients.Client{}, false
-	}
-	if !clientAuthed {
-		// VerifyClientSecret will have logged
-		endpoints.writeTokenAuthErrorResponse(ctx, tokenErrorInvalidClient, "", rsp)
-		return clients.Client{}, false
+		clientAuthed, err := endpoints.clientSvc.VerifyClientSecret(ctx, client, clientSecret)
+		if err != nil {
+			// VerifyClientSecret will have logged
+			rsp.WriteHeader(http.StatusInternalServerError)
+			return clients.Client{}, false
+		}
+		if !clientAuthed {
+			// VerifyClientSecret will have logged
+			endpoints.writeTokenAuthErrorResponse(ctx, tokenErrorInvalidClient, "", rsp)
+			return clients.Client{}, false
+		}
 	}
 
 	return client, true
