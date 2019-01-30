@@ -279,6 +279,12 @@ func (endpoints *WebEndpoints) writeTokenErrorResponse(ctx context.Context, er s
 		Description: description,
 	}
 
+	rsp.Header().Add("Content-Type", "application/json;charset=UTF-8")
+	cacheAge := strconv.FormatFloat(endpoints.authConfig.accessTokenTTL.Seconds(), 'f', 0, 64)
+	rsp.Header().Add("Cache-Control", "max-age="+cacheAge)
+
+	rsp.WriteHeader(statusCode)
+
 	jsonBytes, err := json.Marshal(errObj)
 	if err != nil {
 		logger.Error("Error serializing Token error response JSON",
@@ -294,12 +300,6 @@ func (endpoints *WebEndpoints) writeTokenErrorResponse(ctx context.Context, er s
 		rsp.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	rsp.Header().Add("Content-Type", "application/json;charset=UTF-8")
-	cacheAge := strconv.FormatFloat(endpoints.authConfig.accessTokenTTL.Seconds(), 'f', 0, 64)
-	rsp.Header().Add("Cache-Control", "max-age="+cacheAge)
-
-	rsp.WriteHeader(http.StatusBadRequest)
 }
 
 type tokenResponse struct {
@@ -322,20 +322,19 @@ func (endpoints *WebEndpoints) writeTokenResponse(ctx context.Context, accessTok
 		Scope:        scope,
 	}
 
+	rsp.Header().Set("Content-Type", "application/json;charset=UTF-8")
+
+	rsp.WriteHeader(http.StatusOK)
+
 	responseJSON, err := json.Marshal(responseObj)
 	if err != nil {
 		rsp.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	logger.Debug(string(responseJSON))
-
 	_, err = rsp.Write(responseJSON)
 	if err != nil {
 		rsp.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	rsp.Header().Set("Content-Type", "application/json;charset=UTF-8")
-
-	rsp.WriteHeader(http.StatusOK)
 }
