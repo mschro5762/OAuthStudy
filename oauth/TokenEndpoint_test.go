@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -1192,103 +1194,1081 @@ func TestTokenEndpoint_BadClientSecret_DoesNotWriteRefreshToken(t *testing.T) {
 }
 
 func TestTokenEndpoint_UnrecognizedGrantTypeParam_Writes400(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Set("grant_type", "bad grant type")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if rsp.Code != http.StatusBadRequest {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_UnrecognizedGrantTypeParam_WritesErrorResponse(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Set("grant_type", "bad grant type")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	jsonResponse := rsp.Body.Bytes()
+	var err tokenErrorResponse
+	_ = json.Unmarshal(jsonResponse, &err)
+
+	if err.Error != "invalid_grant" {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_UnrecognizedGrantTypeParam_DoesNotWriteAuthToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Set("grant_type", "bad grant type")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "access_token") {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_UnrecognizedGrantTypeParam_DoesNotWriteRefreshToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Set("grant_type", "bad grant type")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "refresh_token") {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_UnsupportedGrantTypeParam_Writes400(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Set("grant_type", tokenGrantTypeResourceOwnerCredentials)
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if rsp.Code != http.StatusBadRequest {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_UnsupportedGrantTypeParam_WritesErrorResponse(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Set("grant_type", tokenGrantTypeResourceOwnerCredentials)
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	jsonResponse := rsp.Body.Bytes()
+	var err tokenErrorResponse
+	_ = json.Unmarshal(jsonResponse, &err)
+
+	if err.Error != "invalid_grant" {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_UnsupportedGrantTypeParam_DoesNotWriteAuthToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Set("grant_type", tokenGrantTypeResourceOwnerCredentials)
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "access_token") {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_UnsupportedGrantTypeParam_DoesNotWriteRefreshToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Set("grant_type", tokenGrantTypeResourceOwnerCredentials)
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "refresh_token") {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_TwoGrantTypeParams_Writes400(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Add("grant_type", tokenGrantTypeAuthzCode)
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if rsp.Code != http.StatusBadRequest {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_TwoGrantTypeParams_WritesErrorResponse(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Add("grant_type", tokenGrantTypeAuthzCode)
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	jsonResponse := rsp.Body.Bytes()
+	var err tokenErrorResponse
+	_ = json.Unmarshal(jsonResponse, &err)
+
+	if err.Error != "invalid_grant" {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_TwoGrantTypeParams_DoesNotWriteAuthToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Add("grant_type", tokenGrantTypeAuthzCode)
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "access_token") {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_TwoGrantTypeParams_DoesNotWriteRefreshToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Add("grant_type", tokenGrantTypeAuthzCode)
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "refresh_token") {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_MissingGrantTypeParams_Writes400(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Del("grant_type")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if rsp.Code != http.StatusBadRequest {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_MissingGrantTypeParams_WritesErrorResponse(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Del("grant_type")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	jsonResponse := rsp.Body.Bytes()
+	var err tokenErrorResponse
+	_ = json.Unmarshal(jsonResponse, &err)
+
+	if err.Error != "invalid_grant" {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_MissingGrantTypeParams_DoesNotWriteAuthToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Del("grant_type")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "access_token") {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_MissingGrantTypeParams_DoesNotWriteRefreshToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Del("grant_type")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "refresh_token") {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_TwoRedirectURIParams_Writes400(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, testClient.RedirectURI, "")
+	form.Add("redirect_uri", testClient.RedirectURI)
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if rsp.Code != http.StatusBadRequest {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_TwoRedirectURIParams_WritesErrorResponse(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, testClient.RedirectURI, "")
+	form.Add("redirect_uri", testClient.RedirectURI)
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	jsonResponse := rsp.Body.Bytes()
+	var err tokenErrorResponse
+	_ = json.Unmarshal(jsonResponse, &err)
+
+	if err.Error != "invalid_request" {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_TwoRedirectURIParams_DoesNotWriteAuthToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, testClient.RedirectURI, "")
+	form.Add("redirect_uri", testClient.RedirectURI)
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "access_token") {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_TwoRedirectURIParams_DoesNotWriteRefreshToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, testClient.RedirectURI, "")
+	form.Add("redirect_uri", testClient.RedirectURI)
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "refresh_token") {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_RedirectURIParamMismatchAuth_Writes400(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{
+		ValidateAuthorizationCodeFunc: func(context.Context, clients.Client, []byte, string) (bool, uuid.UUID, error) {
+			return false, uuid.UUID{}, nil
+		},
+	}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "https://bar.com/redirect", "")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if rsp.Code != http.StatusBadRequest {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_RedirectURIParamMismatchAuth_WritesErrorResponse(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{
+		ValidateAuthorizationCodeFunc: func(context.Context, clients.Client, []byte, string) (bool, uuid.UUID, error) {
+			return false, uuid.UUID{}, nil
+		},
+	}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "https://bar.com/redirect", "")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	jsonResponse := rsp.Body.Bytes()
+	var err tokenErrorResponse
+	_ = json.Unmarshal(jsonResponse, &err)
+
+	if err.Error != "invalid_request" {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_RedirectURIParamMismatchAuth_DoesNotWriteAuthToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{
+		ValidateAuthorizationCodeFunc: func(context.Context, clients.Client, []byte, string) (bool, uuid.UUID, error) {
+			return false, uuid.UUID{}, nil
+		},
+	}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "https://bar.com/redirect", "")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "access_token") {
+		t.Fail()
+	}
 }
 
 func TestTokenEndpoint_RedirectURIParamMismatchAuth_DoesNotWriteRefreshToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{
+		ValidateAuthorizationCodeFunc: func(context.Context, clients.Client, []byte, string) (bool, uuid.UUID, error) {
+			return false, uuid.UUID{}, nil
+		},
+	}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "https://bar.com/redirect", "")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, testClient.ID, []byte(testClient.Secret))
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "refresh_token") {
+		t.Fail()
+	}
 }
 
-func TestTokenEndpoint_RedirectURIParamNotSent_WasSentInAuthzRequest_WritesErrorResponse(t *testing.T) {
+func TestTokenEndpoint_AuthzCodeNotSent_Writes400(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{
+		GetClientFunc: func(context.Context, uuid.UUID) (clients.Client, error) {
+			return testPublicClient, nil
+		},
+	}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Del("code")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, uuid.UUID{}, nil)
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if rsp.Code != http.StatusBadRequest {
+		t.Fail()
+	}
 }
 
-func TestTokenEndpoint_RedirectURIParamNotSent_WasSentInAuthzRequest_DoesNotWriteAuthToken(t *testing.T) {
+func TestTokenEndpoint_AuthzCodeNotSent_WritesErrorResponse(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{
+		GetClientFunc: func(context.Context, uuid.UUID) (clients.Client, error) {
+			return testPublicClient, nil
+		},
+	}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Del("code")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, uuid.UUID{}, nil)
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	jsonResponse := rsp.Body.Bytes()
+	var err tokenErrorResponse
+	_ = json.Unmarshal(jsonResponse, &err)
+
+	if err.Error != "invalid_request" {
+		t.Fail()
+	}
 }
 
-func TestTokenEndpoint_RedirectURIParamNotSent_WasSentInAuthzRequest_DoesNotWriteRefreshToken(t *testing.T) {
+func TestTokenEndpoint_AuthzCodeNotSent_DoesNotWriteAuthToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
 
+	clientSvc := clientRegistryServiceFake{
+		GetClientFunc: func(context.Context, uuid.UUID) (clients.Client, error) {
+			return testPublicClient, nil
+		},
+	}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Del("code")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, uuid.UUID{}, nil)
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "access_token") {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_AuthzCodeNotSent_DoesNotWriteRefreshToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{
+		GetClientFunc: func(context.Context, uuid.UUID) (clients.Client, error) {
+			return testPublicClient, nil
+		},
+	}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, make([]byte, 0), testClient.ID, "", "")
+	form.Del("code")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, uuid.UUID{}, nil)
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "refresh_token") {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_AuthzCodeSentTwice_Writes400(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{
+		GetClientFunc: func(context.Context, uuid.UUID) (clients.Client, error) {
+			return testPublicClient, nil
+		},
+	}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, []byte("code"), testClient.ID, "", "")
+	form.Add("code", "code")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, uuid.UUID{}, nil)
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if rsp.Code != http.StatusBadRequest {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_AuthzCodeSentTwice_WritesErrorResponse(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{
+		GetClientFunc: func(context.Context, uuid.UUID) (clients.Client, error) {
+			return testPublicClient, nil
+		},
+	}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, []byte("code"), testClient.ID, "", "")
+	form.Add("code", "code")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, uuid.UUID{}, nil)
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	jsonResponse := rsp.Body.Bytes()
+	var err tokenErrorResponse
+	_ = json.Unmarshal(jsonResponse, &err)
+
+	if err.Error != "invalid_request" {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_AuthzCodeSentTwice_DoesNotWriteAuthToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{
+		GetClientFunc: func(context.Context, uuid.UUID) (clients.Client, error) {
+			return testPublicClient, nil
+		},
+	}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, []byte("code"), testClient.ID, "", "")
+	form.Add("code", "code")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, uuid.UUID{}, nil)
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "access_token") {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_AuthzCodeSentTwice_DoesNotWriteRefreshToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{
+		GetClientFunc: func(context.Context, uuid.UUID) (clients.Client, error) {
+			return testPublicClient, nil
+		},
+	}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	form := buildAccessTokenRequestForm(ctx, []byte("code"), testClient.ID, "", "")
+	form.Add("code", "code")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, uuid.UUID{}, nil)
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "refresh_token") {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_AuthzCodeMalformedBase64Encoding_Writes500(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{
+		GetClientFunc: func(context.Context, uuid.UUID) (clients.Client, error) {
+			return testPublicClient, nil
+		},
+	}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	badCode := base64.StdEncoding.EncodeToString([]byte("???"))
+	form := buildAccessTokenRequestForm(ctx, []byte(badCode), testClient.ID, "", "")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, uuid.UUID{}, nil)
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if rsp.Code != http.StatusInternalServerError {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_AuthzCodeMalformedBase64Encoding_DoesNotWriteAuthToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{
+		GetClientFunc: func(context.Context, uuid.UUID) (clients.Client, error) {
+			return testPublicClient, nil
+		},
+	}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	badCode := base64.StdEncoding.EncodeToString([]byte("???"))
+	form := buildAccessTokenRequestForm(ctx, []byte(badCode), testClient.ID, "", "")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, uuid.UUID{}, nil)
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "access_token") {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_AuthzCodeMalformedBase64Encoding_DoesNotWriteRefreshToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{
+		GetClientFunc: func(context.Context, uuid.UUID) (clients.Client, error) {
+			return testPublicClient, nil
+		},
+	}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	badCode := base64.StdEncoding.EncodeToString([]byte("???"))
+	form := buildAccessTokenRequestForm(ctx, []byte(badCode), testClient.ID, "", "")
+
+	req := buildAccessTokenRequestWithForm(ctx, form, uuid.UUID{}, nil)
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "refresh_token") {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_ValidateAuthorizationCodeReturnsError_Writes500(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{
+		ValidateAuthorizationCodeFunc: func(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, uuid.UUID, error) {
+			return false, uuid.UUID{}, errors.New("test error")
+		},
+	}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	req := buildAccessTokenRequest(ctx, make([]byte, 0), uuid.UUID{}, testClient.ID, []byte(testClient.Secret), "", "")
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if rsp.Code != http.StatusInternalServerError {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_ValidateAuthorizationCodeReturnsError_DoesNotWriteAuthToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{
+		ValidateAuthorizationCodeFunc: func(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, uuid.UUID, error) {
+			return false, uuid.UUID{}, errors.New("test error")
+		},
+	}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	req := buildAccessTokenRequest(ctx, make([]byte, 0), uuid.UUID{}, testClient.ID, []byte(testClient.Secret), "", "")
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "access_token") {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_ValidateAuthorizationCodeReturnsError_DoesNotWriteRefreshToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{
+		ValidateAuthorizationCodeFunc: func(ctx context.Context, client clients.Client, authzCode []byte, redirectURI string) (bool, uuid.UUID, error) {
+			return false, uuid.UUID{}, errors.New("test error")
+		},
+	}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	req := buildAccessTokenRequest(ctx, make([]byte, 0), uuid.UUID{}, testClient.ID, []byte(testClient.Secret), "", "")
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "refresh_token") {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_BuildAccessTokenReturnsError_Writes500(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{
+		BuildAccessTokenFunc: func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Duration, error) {
+			return make([]byte, 0), time.Duration(0), errors.New("test error")
+		},
+	}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	req := buildAccessTokenRequest(ctx, make([]byte, 0), uuid.UUID{}, testClient.ID, []byte(testClient.Secret), "", "")
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if rsp.Code != http.StatusInternalServerError {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_BuildAccessTokenReturnsError_DoesNotWriteAuthToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{
+		BuildAccessTokenFunc: func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Duration, error) {
+			return make([]byte, 0), time.Duration(0), errors.New("test error")
+		},
+	}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	req := buildAccessTokenRequest(ctx, make([]byte, 0), uuid.UUID{}, testClient.ID, []byte(testClient.Secret), "", "")
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "access_token") {
+		t.Fail()
+	}
+}
+
+func TestTokenEndpoint_BuildAccessTokenReturnsError_DoesNotWriteRefreshToken(t *testing.T) {
+	ctx := contexthelper.NewContextWithLogger(zap.NewNop())
+
+	clientSvc := clientRegistryServiceFake{}
+	userSvc := userServiceFake{}
+	authzSvc := authzServiceFake{
+		BuildAccessTokenFunc: func(ctx context.Context, userID uuid.UUID, clientID uuid.UUID) ([]byte, time.Duration, error) {
+			return make([]byte, 0), time.Duration(0), errors.New("test error")
+		},
+	}
+
+	config := buildDefaultAuthConfig()
+
+	endpoints := NewWebEndpoints(ctx, config, &authzSvc, &userSvc, &clientSvc)
+
+	req := buildAccessTokenRequest(ctx, make([]byte, 0), uuid.UUID{}, testClient.ID, []byte(testClient.Secret), "", "")
+	rsp := httptest.NewRecorder()
+
+	endpoints.TokenEndpoint(rsp, req)
+
+	if strings.Contains(rsp.Body.String(), "refresh_token") {
+		t.Fail()
+	}
 }
 
 func buildAccessTokenRequestForm(ctx context.Context, authzCode []byte, clientIDParam uuid.UUID, redirectURI string, grantType string) *url.Values {
@@ -1306,9 +2286,7 @@ func buildAccessTokenRequestForm(ctx context.Context, authzCode []byte, clientID
 
 	form.Add("code", string(authzCode))
 
-	if redirectURI == "" {
-		form.Add("redirect_uri", "dummyaccesstoken")
-	} else {
+	if redirectURI != "" {
 		form.Add("redirect_uri", redirectURI)
 	}
 
