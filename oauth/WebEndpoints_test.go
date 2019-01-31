@@ -21,6 +21,13 @@ var testClient = clients.Client{
 	IsConfidential: true,
 	RedirectURI:    "https://foo.com/redirect",
 }
+var testPublicClient = clients.Client{
+	ID:             testClient.ID,
+	Name:           testClient.Name,
+	Secret:         testClient.Secret,
+	RedirectURI:    testClient.RedirectURI,
+	IsConfidential: false,
+}
 
 type clientRegistryServiceFake struct {
 	RegisterClientFunc          func(context.Context, string, bool, string) (clients.Client, string, error)
