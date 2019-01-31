@@ -160,7 +160,11 @@ func (endpoints *WebEndpoints) getAndAuthenticateClient(ctx context.Context, rsp
 		// GetClient will have logged
 		// Return 400 as we have no redirect URI to send error params to
 		if strings.HasPrefix(err.Error(), clients.ClientNotFoundError) {
-			endpoints.writeTokenBadRequestErrorResponse(ctx, tokenErrorInvalidClient, "Invalid client ID", rsp)
+			if basicAuthExists {
+				endpoints.writeTokenAuthErrorResponse(ctx, tokenErrorInvalidClient, "Invalid client ID", rsp)
+			} else {
+				endpoints.writeTokenBadRequestErrorResponse(ctx, tokenErrorInvalidClient, "Invalid client ID", rsp)
+			}
 		} else {
 			rsp.WriteHeader(http.StatusInternalServerError)
 		}
