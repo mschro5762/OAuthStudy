@@ -66,7 +66,7 @@ func (endpoints *WebEndpoints) TokenEndpoint(rsp http.ResponseWriter, req *http.
 		return
 	}
 
-	redirectURI, canContinue := endpoints.validateRedirectURIParameter(ctx, rsp, req)
+	redirectURIParam, canContinue := endpoints.validateRedirectURIParameter(ctx, rsp, req)
 	if !canContinue {
 		// validateRedirectURIParameter will have logged and written to rsp
 		return
@@ -86,7 +86,7 @@ func (endpoints *WebEndpoints) TokenEndpoint(rsp http.ResponseWriter, req *http.
 		return
 	}
 
-	codeIsValid, userID, err := endpoints.authTokenSvc.ValidateAuthorizationCode(ctx, client, decodedCode, redirectURI)
+	codeIsValid, userID, err := endpoints.authTokenSvc.ValidateAuthorizationCode(ctx, client, decodedCode, redirectURIParam)
 	if err != nil {
 		logger.Warn("Unable to validate authorization code",
 			zap.Error(err))
@@ -95,7 +95,7 @@ func (endpoints *WebEndpoints) TokenEndpoint(rsp http.ResponseWriter, req *http.
 	}
 	if !codeIsValid {
 		logger.Warn("Invalid authorization code")
-		endpoints.writeTokenBadRequestErrorResponse(ctx, tokenErrorInvalidGrant, "", rsp)
+		endpoints.writeTokenBadRequestErrorResponse(ctx, tokenErrorInvalidRequest, "", rsp)
 		return
 	}
 
