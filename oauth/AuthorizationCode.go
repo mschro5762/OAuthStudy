@@ -93,19 +93,19 @@ func (tokenSvc *AuthTokenService) ValidateAuthorizationCode(ctx context.Context,
 
 	if code.ExpiresAt.Before(now) || code.IssuedAt.After(now) {
 		logger.Warn("Expired Authorization Code")
-		return false, uuid.UUID{}, err
+		return false, uuid.UUID{}, nil
 	}
 
 	if code.ClientID != client.ID {
 		logger.Warn("Authoriztion code not for requesting Client")
-		return false, uuid.UUID{}, err
+		return false, uuid.UUID{}, nil
 	}
 
 	if code.RedirectURISent && client.RedirectURI != redirectURI {
 		logger.Warn("Redirect URI mismatch",
 			zap.String("clientRedirectURI", client.RedirectURI),
 			zap.String("redirectURISent", redirectURI))
-		return false, uuid.UUID{}, err
+		return false, uuid.UUID{}, nil
 	}
 
 	logger.Info("Authorization code valid")
